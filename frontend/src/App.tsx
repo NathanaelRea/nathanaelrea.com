@@ -1,62 +1,37 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Container } from "react-bootstrap";
 import "./App.css";
 import Angular from "./components/Angular";
 import Drupal from "./components/Drupal";
 
 import { ViteDefaultTop, ViteDefaultBot } from "./components/ViteDefault";
-
-// Go through js frameworks as 'buildings'
-//  Angular, Drupal, Jquery, ASP.Net, Symfony, Gatsby, Flask, Laravel, Django, Angular, Rails, Spring, Express, Vue, React, FastAPI, ASP.NETCore, Svelt
-
-// paralax scroll down, show links
-// Router: Art, not much else lol
+import BuildingButton from "./components/BuildingButton";
+import { BuildingContext } from "./BuildingContext";
 
 function saveData(data: any) {
   window.localStorage.setItem("state", JSON.stringify(data));
 }
 
-function initData() {
-  const newData = window.localStorage.getItem("state");
-  if (true) {
-    console.log("no data");
-    return {
-      isActive: false,
-      count: 0,
-      data: [0, 0, 0],
-    };
-  } else {
-    console.log("found data");
-    console.log(newData);
-    return JSON.parse(newData);
-  }
-}
-
-const loadedData = initData();
-
 function App() {
-  const [{ isActive, count, data: data }, setData] = useState(loadedData);
+  const [isActive, setIsActive] = useState(false);
+  const [count, setCount] = useState(0);
+  const [maxCount, setMaxCount] = useState(0);
+
+  const { buildings, setBuildings, countProduction } =
+    useContext(BuildingContext);
 
   useEffect(() => {
-    const countBuildingProduction = () => {
-      setData((prvState: any) => {
-        // Use StructuredClone b/c we need to access the property via variable
-        // Can't just return {...prvState, [id]: prvState.data[id] + acc} b/c it's nested
-        const newState = structuredClone(prvState);
-        for (var i = 0; i < newState.data.length; i++) {
-          newState.count += Math.pow(10, i) * newState.data[i];
-        }
-        return newState;
-      });
-    };
-
     const intervalId = setInterval(() => {
-      countBuildingProduction();
-      //saveData({ isActive, count, data });
+      setCount((count) => count + countProduction());
     }, 1000);
 
+    console.log("buildings from useEffect", buildings);
     return () => clearInterval(intervalId);
   }, []);
+
+  useEffect(() => {
+    setMaxCount(Math.max(maxCount, count));
+  }, [count]);
 
   const [offsetY, setOffsetY] = useState(0);
   useEffect(() => {
@@ -72,12 +47,8 @@ function App() {
       <div className="card">
         <button
           onClick={() => {
-            setData((prvState: any) => {
-              const newState = structuredClone(prvState);
-              newState.count += 1;
-              newState.isActive = true;
-              return newState;
-            });
+            setIsActive(true);
+            setCount((count) => count + 1);
           }}
         >
           count is {count}
@@ -89,6 +60,12 @@ function App() {
             <Container fluid>
               <Angular />
               <Drupal />
+              <BuildingButton
+                id="jquery"
+                image="jQuery.eps"
+                buildings={buildings}
+                setBuildings={setBuildings}
+              />
             </Container>
           </div>
         </>

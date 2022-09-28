@@ -6,7 +6,7 @@ export default function Drupal() {
 
   return (
     <button onClick={() => setCount((count) => count + 1)}>
-      <img height={"100rem"} src={logo} />
+      <img height={"50rem"} src={logo} />
       <br></br>
       {count}
     </button>
