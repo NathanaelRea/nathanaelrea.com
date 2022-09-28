@@ -5,17 +5,28 @@ interface IBuilding {
   level: number;
 }
 
-//  Angular, Drupal, Jquery, ASP.Net, Symfony, Gatsby, Flask, Laravel, Django, Angular, Rails, Spring, Express, Vue, React, FastAPI, ASP.NETCore, Svelt
 export interface IBuildings {
-  angular: IBuilding;
-  drupal: IBuilding;
-  jquery: IBuilding;
+  [key: string]: IBuilding;
 }
 
 const buildingDefaults: IBuildings = {
   angular: { count: 0, level: 0 },
   drupal: { count: 0, level: 1 },
   jquery: { count: 0, level: 2 },
+  aspNet: { count: 0, level: 3 },
+  symfony: { count: 0, level: 4 },
+  gatsby: { count: 0, level: 5 },
+  flask: { count: 0, level: 6 },
+  laravel: { count: 0, level: 7 },
+  django: { count: 0, level: 8 },
+  rails: { count: 0, level: 9 },
+  spring: { count: 0, level: 10 },
+  express: { count: 0, level: 11 },
+  vue: { count: 0, level: 12 },
+  react: { count: 0, level: 13 },
+  fastApi: { count: 0, level: 14 },
+  aspNetCore: { count: 0, level: 15 },
+  svelte: { count: 0, level: 16 },
 };
 
 export const BuildingContext = createContext<{
@@ -25,10 +36,7 @@ export const BuildingContext = createContext<{
 }>({
   buildings: buildingDefaults,
   setBuildings: () => null,
-  countProduction: () => {
-    console.log("DEFAULT COUNT");
-    return 0;
-  },
+  countProduction: () => 0,
 });
 
 export default function BuildingProvider({
@@ -43,7 +51,6 @@ export default function BuildingProvider({
     for (let [building, data] of Object.entries(buildings)) {
       acc += Math.pow(10, data.level) * data.count;
     }
-    console.log("Production: ", acc);
     return acc;
   };
 

@@ -1,8 +1,8 @@
-import { useContext } from "react";
+import React, { useContext } from "react";
 import logo from "../assets/Game/jQuery.png";
 import { BuildingContext, IBuildings } from "../BuildingContext";
 
-export default function BuildingButton(params: any) {
+export default function BuildingButton(params: { id: string; logo: string }) {
   const { buildings, setBuildings } = useContext(BuildingContext);
 
   return (
@@ -11,18 +11,18 @@ export default function BuildingButton(params: any) {
         setBuildings((buildings: IBuildings) => {
           return {
             ...buildings,
-            jquery: {
-              ...buildings.jquery,
-              count: buildings.jquery.count + 1,
+            [params.id]: {
+              ...buildings[params.id],
+              count: buildings[params.id].count + 1,
             },
           };
         })
       }
       style={{ background: "transparent" }}
     >
-      <img height={"50rem"} src={logo} />
+      <img height={"50rem"} src={params.logo} />
       <br></br>
-      {buildings.jquery.count}
+      {buildings[params.id].count}
     </button>
   );
 }
