@@ -43,7 +43,6 @@ export default function BuildingProvider({
     for (let [building, data] of Object.entries(buildings)) {
       acc += Math.pow(10, data.level) * data.count;
     }
-    console.table(buildings);
     console.log("Production: ", acc);
     return acc;
   };

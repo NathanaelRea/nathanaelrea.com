@@ -1,12 +1,14 @@
-import { useContext, useState } from "react";
-import logo from "../assets/Game/vue.svg";
+import { useContext } from "react";
+import logo from "../assets/Game/jQuery.png";
 import { BuildingContext, IBuildings } from "../BuildingContext";
 
 export default function BuildingButton(params: any) {
+  const { buildings, setBuildings } = useContext(BuildingContext);
+
   return (
     <button
       onClick={() =>
-        params.setBuildings((buildings: IBuildings) => {
+        setBuildings((buildings: IBuildings) => {
           return {
             ...buildings,
             jquery: {
@@ -20,7 +22,7 @@ export default function BuildingButton(params: any) {
     >
       <img height={"50rem"} src={logo} />
       <br></br>
-      {params.buildings.jquery.count}
+      {buildings.jquery.count}
     </button>
   );
 }

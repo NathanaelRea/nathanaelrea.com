@@ -17,17 +17,15 @@ function App() {
   const [count, setCount] = useState(0);
   const [maxCount, setMaxCount] = useState(0);
 
-  const { buildings, setBuildings, countProduction } =
-    useContext(BuildingContext);
+  const { buildings, countProduction } = useContext(BuildingContext);
 
   useEffect(() => {
-    const intervalId = setInterval(() => {
-      setCount((count) => count + countProduction());
+    const intervalId = setInterval(async () => {
+      await setCount((count) => count + countProduction());
     }, 1000);
 
-    console.log("buildings from useEffect", buildings);
     return () => clearInterval(intervalId);
-  }, []);
+  }, [buildings]);
 
   useEffect(() => {
     setMaxCount(Math.max(maxCount, count));
@@ -60,12 +58,7 @@ function App() {
             <Container fluid>
               <Angular />
               <Drupal />
-              <BuildingButton
-                id="jquery"
-                image="jQuery.eps"
-                buildings={buildings}
-                setBuildings={setBuildings}
-              />
+              <BuildingButton id="jquery" image="jQuery.eps" />
             </Container>
           </div>
         </>
