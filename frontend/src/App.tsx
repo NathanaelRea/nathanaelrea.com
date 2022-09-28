@@ -15,7 +15,7 @@ import symfonyLogo from "./assets/Game/symfony.svg";
 import gatsbyLogo from "./assets/Game/gatsby.svg";
 import flaskLogo from "./assets/Game/flask.svg";
 import laravelLogo from "./assets/Game/laravel.svg";
-import djangoLogo from "./assets/Game/django.svg";
+import djangoLogo from "./assets/Game/django.png";
 import railsLogo from "./assets/Game/rails.svg";
 import springLogo from "./assets/Game/spring.svg";
 import expressLogo from "./assets/Game/express.png";
