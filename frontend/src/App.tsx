@@ -1,10 +1,11 @@
-import { useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { Container } from "react-bootstrap";
 import "./App.css";
 
 import { ViteDefaultTop, ViteDefaultBot } from "./components/ViteDefault";
-import BuildingButton from "./components/BuildingButton";
-import { BuildingContext } from "./BuildingContext";
+import Building from "./components/Building";
+import { BuildingContext, IBuildings } from "./BuildingContext";
+import { CountContext } from "./CountContext";
 
 // :(
 import angularLogo from "./assets/Game/angular.svg";
@@ -25,36 +26,30 @@ import fastApiLogo from "./assets/Game/fastapi.png";
 import aspNetCoreLogo from "./assets/Game/asp.net.core.svg";
 import svelteLogo from "./assets/Game/svelte.svg";
 
-function saveData(data: any) {
-  window.localStorage.setItem("state", JSON.stringify(data));
-}
-
 function App() {
   const [isActive, setIsActive] = useState(false);
   const [count, setCount] = useState(0);
   const [maxCount, setMaxCount] = useState(0);
 
-  const { buildings, countProduction } = useContext(BuildingContext);
-
-  useEffect(() => {
-    const intervalId = setInterval(async () => {
-      await setCount((count) => count + countProduction());
-    }, 1000);
-
-    return () => clearInterval(intervalId);
-  }, [buildings]);
-
   useEffect(() => {
     setMaxCount(Math.max(maxCount, count));
   }, [count]);
 
-  const [offsetY, setOffsetY] = useState(0);
+  // Hacky workaround to allow re-mounding with [buildings] not reset basic setInterval
+  const { buildings, countProduction } = useContext(BuildingContext);
+  const [lastUpdate, setLastUpdate] = useState(Date.now());
   useEffect(() => {
-    const handleScroll = () => setOffsetY(window.pageYOffset);
-    window.addEventListener("scroll", handleScroll);
-
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+    const setCountFromProduction = () => {
+      if (Date.now() - lastUpdate <= 1000) return;
+      setLastUpdate(Date.now());
+      setCount((count) => count + countProduction());
+    };
+    setCountFromProduction();
+    const intervalId = setInterval(() => {
+      setCountFromProduction();
+    }, 1000);
+    return () => clearInterval(intervalId);
+  }, [buildings]);
 
   return (
     <div className="App">
@@ -71,25 +66,27 @@ function App() {
       </div>
       {isActive ? (
         <>
-          <div style={{ transform: `translateY(${offsetY * 0.5}px)` }}>
+          <div>
             <Container fluid>
-              <BuildingButton id="angular" logo={angularLogo} />
-              <BuildingButton id="drupal" logo={drupalLogo} />
-              <BuildingButton id="jquery" logo={jQueryLogo} />
-              <BuildingButton id="aspNet" logo={aspNetLogo} />
-              <BuildingButton id="symfony" logo={symfonyLogo} />
-              <BuildingButton id="gatsby" logo={gatsbyLogo} />
-              <BuildingButton id="flask" logo={flaskLogo} />
-              <BuildingButton id="laravel" logo={laravelLogo} />
-              <BuildingButton id="django" logo={djangoLogo} />
-              <BuildingButton id="rails" logo={railsLogo} />
-              <BuildingButton id="spring" logo={springLogo} />
-              <BuildingButton id="express" logo={expressLogo} />
-              <BuildingButton id="vue" logo={vueLogo} />
-              <BuildingButton id="react" logo={reactLogo} />
-              <BuildingButton id="fastApi" logo={fastApiLogo} />
-              <BuildingButton id="aspNetCore" logo={aspNetCoreLogo} />
-              <BuildingButton id="svelte" logo={svelteLogo} />
+              <CountContext.Provider value={{ count, setCount, maxCount }}>
+                <Building id="angular" logo={angularLogo} />
+                <Building id="drupal" logo={drupalLogo} />
+                <Building id="jquery" logo={jQueryLogo} />
+                <Building id="aspNet" logo={aspNetLogo} />
+                <Building id="symfony" logo={symfonyLogo} />
+                <Building id="gatsby" logo={gatsbyLogo} />
+                <Building id="flask" logo={flaskLogo} />
+                <Building id="laravel" logo={laravelLogo} />
+                <Building id="django" logo={djangoLogo} />
+                <Building id="rails" logo={railsLogo} />
+                <Building id="spring" logo={springLogo} />
+                <Building id="express" logo={expressLogo} />
+                <Building id="vue" logo={vueLogo} />
+                <Building id="react" logo={reactLogo} />
+                <Building id="fastApi" logo={fastApiLogo} />
+                <Building id="aspNetCore" logo={aspNetCoreLogo} />
+                <Building id="svelte" logo={svelteLogo} />
+              </CountContext.Provider>
             </Container>
           </div>
         </>

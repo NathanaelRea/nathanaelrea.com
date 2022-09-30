@@ -1,4 +1,4 @@
-import { createContext, useState } from "react";
+import { createContext, useEffect, useState } from "react";
 
 interface IBuilding {
   count: number;
@@ -48,7 +48,7 @@ export default function BuildingProvider({
 
   const countProduction = () => {
     var acc = 0;
-    for (let [building, data] of Object.entries(buildings)) {
+    for (let data of Object.values(buildings)) {
       acc += Math.pow(10, data.level) * data.count;
     }
     return acc;
