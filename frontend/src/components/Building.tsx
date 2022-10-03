@@ -1,6 +1,7 @@
 import React, { useContext } from "react";
 import { BuildingContext } from "../BuildingContext";
 import { CountContext } from "../CountContext";
+import { motion } from "framer-motion";
 
 export default function BuildingButton(params: { id: string; logo: string }) {
   const { buildings, setBuildings } = useContext(BuildingContext);
@@ -24,15 +25,17 @@ export default function BuildingButton(params: { id: string; logo: string }) {
   };
 
   return showBuilding ? (
-    <button
+    <motion.button
       onClick={incrementThisBuilding}
       style={{ background: "transparent" }}
       disabled={!canBuy}
+      initial={{ opacity: 0, x: "-100%" }}
+      animate={{ opacity: 1, x: 0 }}
     >
       <img height={"50rem"} src={params.logo} />
       <br></br>
       {buildings[params.id].count}
-    </button>
+    </motion.button>
   ) : (
     <></>
   );

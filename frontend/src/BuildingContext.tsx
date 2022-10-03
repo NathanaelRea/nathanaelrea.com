@@ -9,6 +9,7 @@ export interface IBuildings {
   [key: string]: IBuilding;
 }
 
+// Done like this b/c not sure if I want to update ranking & have local storage
 const buildingDefaults: IBuildings = {
   angular: { count: 0, level: 0 },
   drupal: { count: 0, level: 1 },

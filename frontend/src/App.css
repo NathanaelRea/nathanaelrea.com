@@ -36,6 +36,10 @@
   padding: 2em;
 }
 
+.building {
+  transition: ease-in;
+}
+
 .read-the-docs {
   color: #888;
 }
