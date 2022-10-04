@@ -29,7 +29,6 @@ import {
 } from "./assets/Game";
 
 function App() {
-  const [isActive, setIsActive] = useState(false);
   const [count, setCount] = useState(0);
   const [maxCount, setMaxCount] = useState(0);
 
@@ -59,37 +58,34 @@ function App() {
       <div className="card">
         <button
           onClick={() => {
-            setIsActive(true);
             setCount((count) => count + 1);
           }}
         >
           count is {count}
         </button>
       </div>
-      {isActive ? (
-        <motion.div initial={{ y: "-100%" }} animate={{ y: 0 }}>
-          <Container fluid>
-            <CountContext.Provider value={{ count, setCount, maxCount }}>
-              <Building id="angular" logo={angularLogo} />
-              <Building id="drupal" logo={drupalLogo} />
-              <Building id="jquery" logo={jQueryLogo} />
-              <Building id="aspNet" logo={aspNetLogo} />
-              <Building id="symfony" logo={symfonyLogo} />
-              <Building id="gatsby" logo={gatsbyLogo} />
-              <Building id="flask" logo={flaskLogo} />
-              <Building id="laravel" logo={laravelLogo} />
-              <Building id="django" logo={djangoLogo} />
-              <Building id="rails" logo={railsLogo} />
-              <Building id="spring" logo={springLogo} />
-              <Building id="express" logo={expressLogo} />
-              <Building id="vue" logo={vueLogo} />
-              <Building id="react" logo={reactLogo} />
-              <Building id="fastApi" logo={fastApiLogo} />
-              <Building id="aspNetCore" logo={aspNetCoreLogo} />
-              <Building id="svelte" logo={svelteLogo} />
-            </CountContext.Provider>
-          </Container>
-        </motion.div>
+      {maxCount > 0 ? (
+        <div>
+          <CountContext.Provider value={{ count, setCount, maxCount }}>
+            <Building id="angular" logo={angularLogo} />
+            <Building id="drupal" logo={drupalLogo} />
+            <Building id="jquery" logo={jQueryLogo} />
+            <Building id="aspNet" logo={aspNetLogo} />
+            <Building id="symfony" logo={symfonyLogo} />
+            <Building id="gatsby" logo={gatsbyLogo} />
+            <Building id="flask" logo={flaskLogo} />
+            <Building id="laravel" logo={laravelLogo} />
+            <Building id="django" logo={djangoLogo} />
+            <Building id="rails" logo={railsLogo} />
+            <Building id="spring" logo={springLogo} />
+            <Building id="express" logo={expressLogo} />
+            <Building id="vue" logo={vueLogo} />
+            <Building id="react" logo={reactLogo} />
+            <Building id="fastApi" logo={fastApiLogo} />
+            <Building id="aspNetCore" logo={aspNetCoreLogo} />
+            <Building id="svelte" logo={svelteLogo} />
+          </CountContext.Provider>
+        </div>
       ) : (
         <ViteDefaultBot />
       )}
