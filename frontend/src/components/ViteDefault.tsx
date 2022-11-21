@@ -1,7 +1,6 @@
-import reactLogo from "../assets/Game/react.svg";
-import viteLogo from "../assets/Game/vite.svg";
+import { reactLogo, viteLogo } from "../assets/Game";
 
-export const ViteDefaultTop = () => {
+export function ViteDefaultTop() {
   return (
     <>
       <div>
@@ -15,9 +14,9 @@ export const ViteDefaultTop = () => {
       <h1>Vite + React</h1>
     </>
   );
-};
+}
 
-export const ViteDefaultBot = () => {
+export function ViteDefaultBot() {
   return (
     <>
       <div>
@@ -30,4 +29,4 @@ export const ViteDefaultBot = () => {
       </p>
     </>
   );
-};
+}
