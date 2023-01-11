@@ -1,17 +1,36 @@
 import type { Hex } from "react-hexgrid";
 import { GridGenerator } from "react-hexgrid";
-import Asdf from "./Game";
+import { playerColors } from "../../data/colors";
+import BaseGrid from "./BaseGrid";
+
+export type Player = {
+  id: number;
+  color: string;
+  hexes: Hex[];
+};
+
+class PlayerImpl implements Player {
+  id;
+  color;
+  hexes;
+  constructor(id: number) {
+    this.id = id;
+    this.color = playerColors[id];
+    this.hexes = [] as Hex[];
+  }
+}
 
 export default function () {
-  const hexes = GridGenerator.hexagon(8);
+  const hexRadius = 8;
+  const hexesToRemove = 75;
+  const hexes = GridGenerator.hexagon(hexRadius);
   shuffleArray(hexes);
-  hexes.splice(0, 50);
+  hexes.splice(0, hexesToRemove);
 
   const nPlayers = 8;
-  const players = {} as { [key: number]: Hex[] };
+  const players = [...Array(nPlayers).keys()].map((i) => new PlayerImpl(i));
   hexes.forEach((hex, index) => {
-    if (!(index % nPlayers in players)) players[index % nPlayers] = [];
-    players[index % nPlayers].push(hex);
+    players[index % nPlayers].hexes.push(hex);
   });
 
   function shuffleArray(array: Hex[]) {
@@ -20,6 +39,5 @@ export default function () {
       [array[i], array[j]] = [array[j], array[i]];
     }
   }
-
-  return <Asdf hexes={players} />;
+  return <BaseGrid players={players} />;
 }
