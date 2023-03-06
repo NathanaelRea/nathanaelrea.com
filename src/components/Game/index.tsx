@@ -20,7 +20,7 @@ class PlayerImpl implements Player {
   }
 }
 
-export default function () {
+export default function Game() {
   const hexRadius = 8;
   const hexesToRemove = 75;
   const hexes = GridGenerator.hexagon(hexRadius);
