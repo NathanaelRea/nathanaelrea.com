@@ -1,5 +1,5 @@
 {
-  "name": "frontend",
+  "name": "nathanaelrea-site",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -10,16 +10,18 @@
     "lint:check": "eslint \"./src/**/*.{ts,tsx}\""
   },
   "dependencies": {
+    "@vitejs/plugin-react-swc": "^3.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "@types/react": "^18.0.25",
-    "@types/react-dom": "^18.0.9",
-    "@typescript-eslint/eslint-plugin": "^5.47.1",
-    "@vitejs/plugin-react": "^2.2.0",
-    "eslint": "^8.30.0",
-    "typescript": "^4.9.3",
-    "vite": "^3.2.4"
+    "@types/react": "^18.0.28",
+    "@types/react-dom": "^18.0.11",
+    "@typescript-eslint/eslint-plugin": "^5.54.0",
+    "@typescript-eslint/parser": "^5.54.0",
+    "eslint": "^8.35.0",
+    "eslint-plugin-react": "^7.32.2",
+    "typescript": "^4.9.5",
+    "vite": "^4.1.4"
   }
 }
