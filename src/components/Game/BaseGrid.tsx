@@ -4,6 +4,7 @@ import { useWindowSize } from "../../hooks/useWindowSize";
 
 export default function BaseGrid({ players }: { players: Player[] }) {
   const { width, height } = useWindowSize();
+
   return (
     <div className="flex justify-center">
       <HexGrid width={width} height={height} className="overflow-hidden">
