@@ -4,10 +4,15 @@ import { useWindowSize } from "../../hooks/useWindowSize";
 
 export default function BaseGrid({ players }: { players: Player[] }) {
   const { width, height } = useWindowSize();
+  const navHeight = 64;
 
   return (
     <div className="flex justify-center">
-      <HexGrid width={width} height={height} className="overflow-hidden">
+      <HexGrid
+        width={width}
+        height={height - navHeight}
+        className="overflow-hidden"
+      >
         <Layout size={{ x: 3, y: 3 }}>
           {players.flatMap((player) =>
             player.hexes.map((hex, hexIndex) => (

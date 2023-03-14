@@ -1,0 +1,21 @@
+import { Outlet, Link } from "react-router-dom";
+import logo from "../../public/favicon.png";
+
+export default function Layout() {
+  return (
+    <>
+      <nav className="bg-zinc-900 w-full fixed">
+        <div className="flex justify-around items-center p-4">
+          <Link to="/">
+            <img src={logo} alt="nr-logo" />
+          </Link>
+          <Link to="/art">Art</Link>
+          <Link to="/slay">Slay (wip)</Link>
+        </div>
+      </nav>
+      <div className="pt-16">
+        <Outlet />
+      </div>
+    </>
+  );
+}
