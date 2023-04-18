@@ -1,5 +1,5 @@
 import { Outlet, Link } from "react-router-dom";
-import logo from "../../public/favicon.png";
+import logo from "../../src/home.png";
 
 export default function Layout() {
   return (
