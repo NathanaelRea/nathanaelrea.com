@@ -10,6 +10,7 @@ export default function Layout() {
             <img src={logo} alt="nr-logo" />
           </Link>
           <Link to="/art">Art</Link>
+          <Link to="/c1">C1 (wip)</Link>
           <Link to="/slay">Slay (wip)</Link>
         </div>
       </nav>

@@ -5,6 +5,7 @@ import Loading from "./components/Loading";
 const Home = lazy(() => import("./components/Home"));
 const Art = lazy(() => import("./components/Art"));
 const Slay = lazy(() => import("./components/Slay"));
+const C1 = lazy(() => import("./components/C1"));
 
 export default function App() {
   return (
@@ -14,6 +15,7 @@ export default function App() {
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />
             <Route path="/art" element={<Art />} />
+            <Route path="/c1" element={<C1 />} />
             <Route path="/slay" element={<Slay />} />
           </Route>
         </Routes>
