@@ -32,9 +32,9 @@ export const defaultData: Purchases[] = [
     name: "bitcoin",
     percentTarget: 0.5,
     buyHistory: [
-      { amount: 0.1, date: "2023-01-01" },
-      { amount: 0.1, date: "2023-02-01" },
-      { amount: 0.1, date: "2023-03-01" },
+      { value: 0.1, date: new Date("2023-01-01") },
+      { value: 0.1, date: new Date("2023-02-01") },
+      { value: 0.1, date: new Date("2023-03-01") },
     ],
   },
   {
@@ -42,11 +42,11 @@ export const defaultData: Purchases[] = [
     name: "ethereum",
     percentTarget: 0.5,
     buyHistory: [
-      { amount: 0.5, date: "2023-01-01" },
-      { amount: 0.5, date: "2023-01-15" },
-      { amount: 0.5, date: "2023-02-01" },
-      { amount: 0.5, date: "2023-02-15" },
-      { amount: 0.5, date: "2023-03-01" },
+      { value: 0.5, date: new Date("2023-01-01") },
+      { value: 0.5, date: new Date("2023-01-15") },
+      { value: 0.5, date: new Date("2023-02-01") },
+      { value: 0.5, date: new Date("2023-02-15") },
+      { value: 0.5, date: new Date("2023-03-01") },
     ],
   },
 ];
