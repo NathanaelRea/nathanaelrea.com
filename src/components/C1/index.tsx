@@ -17,7 +17,7 @@ import {
 } from "@tanstack/react-query";
 import axios from "axios";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type Storage = {
   crypto: Purchases;
@@ -50,10 +50,19 @@ const getMarketHistory = async (name: string) => {
   const res = await axios.get(
     `https://api.coingecko.com/api/v3/coins/${name}/market_chart?vs_currency=usd&days=max`
   );
-  return res.data;
+  return res.data as MarketHistory;
 };
 
-type MarketHistory = [number, number][];
+type MarketHistory = {
+  prices: [number, number][];
+  market_caps: [number, number][];
+  total_volumes: [number, number][];
+};
+
+type TimeSeriesData = {
+  date: Date;
+  value: number;
+};
 
 const queryClient = new QueryClient();
 
@@ -66,12 +75,64 @@ export default function C1() {
   );
 }
 
+function TimeSeriesChart({ data }: { data: TimeSeriesData[] | undefined }) {
+  const chartRef = useRef<SVGSVGElement>(null);
+
+  useEffect(() => {
+    if (chartRef.current == null || data == undefined) return;
+
+    const chart = d3.select(chartRef.current);
+    const width = chartRef.current.clientWidth;
+    const height = chartRef.current.clientHeight;
+
+    // const xScale = d3
+    //   .scaleUtc()
+    //   .domain([data[0].date, data[data.length - 1].date])
+    //   .range([0, width]);
+
+    const xScale = d3
+      .scaleTime()
+      .domain(d3.extent(data, (d) => d.date) as [Date, Date])
+      .range([0, width]);
+
+    const yScale = d3
+      .scaleLinear()
+      .domain([0, d3.max(data, (d) => d.value) || 0])
+      .range([height, 0]);
+
+    const line = d3
+      .line<TimeSeriesData>()
+      .x((d) => xScale(d.date))
+      .y((d) => yScale(d.value));
+
+    chart
+      .append("path")
+      .datum(data)
+      .attr("fill", "none")
+      .attr("stroke", "blue")
+      .attr("stroke-width", 1.5)
+      .attr("d", line);
+
+    // chart
+    //   .append("g")
+    //   .attr("transform", `translate(0, ${height})`)
+    //   .call(
+    //     d3
+    //       .axisBottom(xScale)
+    //       .ticks(d3.timeDay.every(1))
+    //       .tickFormat(d3.timeFormat("%b %d"))
+    //   );
+
+    chart.append("g").call(d3.axisLeft(yScale));
+  }, [data]);
+
+  return <svg ref={chartRef} style={{ width: "100%", height: "400px" }} />;
+}
+
 export function Body() {
   const [portfolio, setPortfolio] = useState(defaultData);
-  // const [marketHistory, setMarketHistory] = useState<MarketHistory[]>([]);
 
   const summaries = generateSlices(portfolio);
-
   const minDate = portfolio.reduce((prv, cur) =>
     prv.buyHistory[0] < cur.buyHistory[0] ? prv : cur
   );
@@ -82,6 +143,19 @@ export function Body() {
       queryFn: () => getMarketHistory(item.name),
     })),
   });
+  const timeSeriesMap = marketHistories.reduce(
+    (acc: { [key: string]: TimeSeriesData[] }, val, idx) => {
+      const k = portfolio[idx].name;
+      const newData = val.data?.prices.map((r) => {
+        return { date: new Date(r[0]), value: r[1] };
+      });
+      if (k == null || newData == null) return acc;
+      acc[k] = newData;
+      return acc;
+    },
+    {}
+  );
+  const eth = timeSeriesMap["ethereum"];
 
   function generateSlices(coins: Purchases[]) {
     const symbolSum = [];
@@ -130,7 +204,8 @@ export function Body() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 ">
         <div className="bg-gray-700 rounded-md p-2 aspect-square">o</div>
         <div className="bg-gray-800 font-bold text-xl p-2 rounded-md sm:col-span-2">
-          Value over time
+          Eth
+          <TimeSeriesChart data={eth} />
         </div>
       </div>
       <div>
