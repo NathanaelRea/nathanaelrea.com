@@ -146,12 +146,27 @@ export function Body() {
     (acc, val) => acc + val.totalSpent,
     0
   );
+
   const pieChartData = assetHistory.map((a) => {
     return {
       label: a.symbol,
       value: a.totalValue / sumTotalValue,
     };
   });
+
+  function calculateTimeSeriesData(assetHistory: AssetHistory[]) {
+    const ans = [] as TimeSeriesData[];
+    for (const a of assetHistory) {
+      for (let i = a.history.length - 1; i >= 0; i--) {
+        const idx = a.history.length - i - 1;
+        if (idx >= ans.length) ans.push({ date: a.history[i].date, value: 0 });
+        ans[idx].value += a.history[i].value;
+      }
+    }
+    ans.reverse();
+    return ans;
+  }
+  const timeSeriesData = calculateTimeSeriesData(assetHistory);
 
   return (
     <div className="gap-6 m-4 md:p-8 grid grid-cols-1 md:grid-cols-3">
@@ -185,7 +200,7 @@ export function Body() {
         <PieChart data={pieChartData} />
       </div>
       <div className="bg-gray-800 font-bold text-xl p-2 rounded-md col-span-1 md:col-span-3 lg:col-span-2">
-        {/* <TimeSeriesChart data={eth} /> */}
+        <TimeSeriesChart data={timeSeriesData} />
       </div>
       <div className="col-span-1 md:col-span-3">
         <h3 className="font-bold text-xl ">Slices</h3>
@@ -372,9 +387,6 @@ function PieChart({ data }: { data: Data[] }) {
       .arc<d3.PieArcDatum<Data>>()
       .innerRadius(Math.min(dimensions.height, dimensions.width) / 5)
       .outerRadius(Math.min(dimensions.height, dimensions.width) / 2.5);
-
-    console.log("dims", dimensions);
-    console.log("outer:", Math.min(dimensions.width, dimensions.height) / 4);
 
     const color = d3.scaleOrdinal<string, string>(d3.schemeCategory10);
 
