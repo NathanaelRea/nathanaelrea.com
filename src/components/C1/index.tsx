@@ -17,7 +17,7 @@ import {
 } from "@tanstack/react-query";
 import axios from "axios";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { useEffect, useRef, useState } from "react";
+import { Children, ReactNode, useEffect, useRef, useState } from "react";
 import { svg } from "d3";
 
 type LocalStorage = {
@@ -30,15 +30,6 @@ export type Purchases = {
   symbol: string;
   name: string;
   buyHistory: TimeSeriesData[];
-  percentTarget: number;
-};
-
-type Slice = {
-  percentActual: number;
-  gain: number;
-  return: number;
-  symbol: string;
-  value: number;
   percentTarget: number;
 };
 
@@ -71,12 +62,20 @@ const getMarketHistory = async (name: string) => {
   return res.data as MarketChartResponse;
 };
 
-type ValueHistory = {
+type AssetHistory = {
+  symbol: string;
   name: string;
   history: TimeSeriesData[];
   totalSpent: number;
   totalValue: number;
 };
+
+function Gain(value: number, cost: number) {
+  return value - cost;
+}
+function Return(value: number, cost: number) {
+  return (value - cost) / cost;
+}
 
 export function Body() {
   const [portfolio, setPortfolio] = useState(defaultData);
@@ -100,14 +99,15 @@ export function Body() {
     {}
   );
 
-  const valueHistory: ValueHistory[] = portfolio.map((p) => {
+  const assetHistory: AssetHistory[] = portfolio.map((p) => {
     if (!Object.hasOwn(timeSeriesMap, p.name))
       return {
+        symbol: p.symbol,
         name: p.name,
         history: [],
         totalValue: 0,
         totalSpent: 0,
-      } as ValueHistory;
+      } as AssetHistory;
     const market = timeSeriesMap[p.name];
     const history = [] as TimeSeriesData[];
     let totalSpent = 0;
@@ -130,35 +130,26 @@ export function Body() {
       });
     });
     return {
+      symbol: p.symbol,
       name: p.name,
       history,
       totalValue: history[history.length - 1].value,
       totalSpent,
-    } as ValueHistory;
+    } as AssetHistory;
   });
-  const valueHistoryLookup = valueHistory.reduce(
-    (acc: { [key: string]: ValueHistory }, val) => {
-      acc[val.name] = val;
-      return acc;
-    },
-    {}
-  );
 
-  const totals = portfolio.map((r) => {
-    return {
-      symbol: r.symbol,
-      total: valueHistoryLookup[r.name],
-    };
-  });
-  const sumTotalValue = totals.reduce(
-    (acc, val) => acc + val.total.totalValue,
+  const sumTotalValue = assetHistory.reduce(
+    (acc, val) => acc + val.totalValue,
     0
   );
-
-  const pieChartData = totals.map((p) => {
+  const sumTotalCost = assetHistory.reduce(
+    (acc, val) => acc + val.totalSpent,
+    0
+  );
+  const pieChartData = assetHistory.map((a) => {
     return {
-      label: p.symbol,
-      value: p.total.totalValue / sumTotalValue,
+      label: a.symbol,
+      value: a.totalValue / sumTotalValue,
     };
   });
 
@@ -172,12 +163,24 @@ export function Body() {
           </button>
         </div>
       </div>
-      <IndicatorLg name="Current Value" value={cFmt.format(20_000.02)} />
-      <IndicatorLg name="Gain" value={cFmt.format(20_000.02)} />
-      <IndicatorLg name="Return" value={pFmt2.format(0.02)} />
-      <IndicatorSm name="Net Cash Flow" value={cFmt.format(0.02)} />
-      <IndicatorSm name="Market Gain" value={cFmt.format(0.02)} />
-      <IndicatorSm name="Earned Staking" value={cFmt.format(0.02)} />
+      <IndicatorLg name="Current Value">
+        <Money value={sumTotalValue} />
+      </IndicatorLg>
+      <IndicatorLg name="Gain">
+        <ColorMoney value={Gain(sumTotalValue, sumTotalCost)} />
+      </IndicatorLg>
+      <IndicatorLg name="Return">
+        <ColorPercent value={Return(sumTotalValue, sumTotalCost)} />
+      </IndicatorLg>
+      <IndicatorSm name="NetCashFlow">
+        <ColorMoney value={sumTotalCost} />
+      </IndicatorSm>
+      <IndicatorSm name="MarketGain">
+        <ColorMoney value={Gain(sumTotalValue, sumTotalCost)} />
+      </IndicatorSm>
+      <IndicatorSm name="Earned Staking">
+        <ColorMoney value={0} />
+      </IndicatorSm>
       <div className="bg-gray-700 rounded-md p-2 md:col-span-3 col-span-1 lg:col-span-1 aspect-square">
         <PieChart data={pieChartData} />
       </div>
@@ -188,7 +191,7 @@ export function Body() {
         <h3 className="font-bold text-xl ">Slices</h3>
         <input className="rounded-sm" placeholder="250" />
         <SliceTableHeader />
-        {valueHistory.map((summary) => (
+        {assetHistory.map((summary) => (
           <SliceTableRow summary={summary} key={summary.name} />
         ))}
       </div>
@@ -214,18 +217,32 @@ function SliceTableHeader() {
   );
 }
 
-function SliceTableRow({ summary }: { summary: ValueHistory }) {
+function Money({ value }: { value: number }) {
+  return <div className="text-white">{cFmt.format(value)}</div>;
+}
+function ColorMoney({ value }: { value: number }) {
+  if (value > 0)
+    return <div className="text-green-500">{cFmt.format(value)}</div>;
+  else if (value < 0)
+    return <div className="text-red-500">{cFmt.format(value)}</div>;
+  else return <div className="text-white">{cFmt.format(value)}</div>;
+}
+function ColorPercent({ value }: { value: number }) {
+  if (value > 0)
+    return <div className="text-green-500">{pFmt1.format(value)}</div>;
+  else if (value < 0)
+    return <div className="text-red-500">{pFmt1.format(value)}</div>;
+  else return <div className="text-white">{pFmt1.format(value)}</div>;
+}
+
+function SliceTableRow({ summary }: { summary: AssetHistory }) {
   return (
     <div className="grid grid-cols-5 bg-cyan-950 text-cyan-100 justify-items-center p-1 items-center">
-      <div>{summary.name}</div>
-      <div>{cFmt.format(summary.totalValue)}</div>
+      <div>{summary.symbol}</div>
+      <ColorMoney value={summary.totalValue} />
       <div className="flex flex-col items-end">
-        <div>{cFmt.format(summary.totalValue - summary.totalSpent)}</div>
-        <div>
-          {pFmt1.format(
-            (summary.totalValue - summary.totalSpent) / summary.totalSpent
-          )}
-        </div>
+        <ColorMoney value={Gain(summary.totalValue, summary.totalSpent)} />
+        <ColorPercent value={Return(summary.totalValue, summary.totalSpent)} />
       </div>
       <div className="flex flex-col items-end">
         <div>Actual</div>
@@ -236,20 +253,32 @@ function SliceTableRow({ summary }: { summary: ValueHistory }) {
   );
 }
 
-function IndicatorLg({ name, value }: { name: string; value: string }) {
+function IndicatorLg({
+  name,
+  children,
+}: {
+  name: string;
+  children: ReactNode;
+}) {
   return (
     <div>
       <div className="text-xs text-gray-400">{name}</div>
-      <div className="text-4xl">{value}</div>
+      <div className="text-4xl">{children}</div>
     </div>
   );
 }
 
-function IndicatorSm({ name, value }: { name: string; value: string }) {
+function IndicatorSm({
+  name,
+  children,
+}: {
+  name: string;
+  children: ReactNode;
+}) {
   return (
     <div>
       <div className="text-xs text-gray-400">{name}</div>
-      <div className="text-lg">{value}</div>
+      <div className="text-lg">{children}</div>
     </div>
   );
 }
