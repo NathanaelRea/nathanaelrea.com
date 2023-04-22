@@ -18,6 +18,7 @@ import {
 import axios from "axios";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { useEffect, useRef, useState } from "react";
+import { svg } from "d3";
 
 type LocalStorage = {
   crypto: Purchases;
@@ -125,31 +126,27 @@ export function Body() {
   }
 
   return (
-    <div className="flex flex-col gap-6 m-4 sm:p-8">
-      <div>
+    <div className="gap-6 m-4 sm:p-8 grid grid-cols-1 sm:grid-cols-3">
+      <div className="col-span-1 sm:col-span-3">
         <div className="flex gap-2">
           <h1 className="font-bold text-2xl">Portfolio</h1>
           <button className="bg-cyan-800 px-2 py-1 rounded-md hover:bg-cyan-700">
             Import
           </button>
         </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 ">
-          <IndicatorLg name="Current Value" value={cFmt.format(20_000.02)} />
-          <IndicatorLg name="Gain" value={cFmt.format(20_000.02)} />
-          <IndicatorLg name="Return" value={pFmt2.format(0.02)} />
-          <IndicatorSm name="Net Cash Flow" value={cFmt.format(0.02)} />
-          <IndicatorSm name="Market Gain" value={cFmt.format(0.02)} />
-          <IndicatorSm name="Earned Staking" value={cFmt.format(0.02)} />
-        </div>
       </div>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 ">
-        <div className="bg-gray-700 rounded-md p-2 aspect-square">o</div>
-        <div className="bg-gray-800 font-bold text-xl p-2 rounded-md sm:col-span-2">
-          Eth
-          <TimeSeriesChart data={eth} />
-        </div>
+      <IndicatorLg name="Current Value" value={cFmt.format(20_000.02)} />
+      <IndicatorLg name="Gain" value={cFmt.format(20_000.02)} />
+      <IndicatorLg name="Return" value={pFmt2.format(0.02)} />
+      <IndicatorSm name="Net Cash Flow" value={cFmt.format(0.02)} />
+      <IndicatorSm name="Market Gain" value={cFmt.format(0.02)} />
+      <IndicatorSm name="Earned Staking" value={cFmt.format(0.02)} />
+      <div className="bg-gray-700 rounded-md p-2">o</div>
+      <div className="bg-gray-800 font-bold text-xl p-2 rounded-md col-span-1 sm:col-span-2">
+        Eth
+        <TimeSeriesChart data={eth} />
       </div>
-      <div>
+      <div className="col-span-1 sm:col-span-3">
         <h3 className="font-bold text-xl ">Slices</h3>
         <input className="rounded-sm" placeholder="250" />
         <SliceTableHeader />
@@ -163,7 +160,7 @@ export function Body() {
 
 function SliceTableHeader() {
   return (
-    <div className="grid grid-cols-5 bg-cyan-900 justify-items-center p-2 text-cyan-300 rounded-t-md items-center">
+    <div className="grid grid-cols-5 bg-cyan-900 p-2 text-cyan-300 rounded-t-md items-center justify-items-center">
       <div>Name</div>
       <div>Value</div>
       <div>
@@ -217,28 +214,38 @@ function IndicatorSm({ name, value }: { name: string; value: string }) {
 
 function TimeSeriesChart({ data }: { data: TimeSeriesData[] | undefined }) {
   const chartRef = useRef<SVGSVGElement>(null);
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+
+  useEffect(() => {
+    const chart = d3.select(chartRef.current);
+    const handleResize = () => {
+      setDimensions({
+        width: chart.node()?.getBoundingClientRect().width || 0,
+        height: chart.node()?.getBoundingClientRect().height || 0,
+      });
+    };
+
+    handleResize();
+
+    window.addEventListener("resize", handleResize);
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     if (chartRef.current == null || data == undefined) return;
 
     const chart = d3.select(chartRef.current);
-    const width = chartRef.current.clientWidth;
-    const height = chartRef.current.clientHeight;
-
-    // const xScale = d3
-    //   .scaleUtc()
-    //   .domain([data[0].date, data[data.length - 1].date])
-    //   .range([0, width]);
 
     const xScale = d3
       .scaleTime()
       .domain(d3.extent(data, (d) => d.date) as [Date, Date])
-      .range([0, width]);
+      .range([0, dimensions.width]);
 
     const yScale = d3
       .scaleLinear()
       .domain([0, d3.max(data, (d) => d.value) || 0])
-      .range([height, 0]);
+      .range([dimensions.height, 0]);
 
     const line = d3
       .line<TimeSeriesData>()
@@ -252,16 +259,6 @@ function TimeSeriesChart({ data }: { data: TimeSeriesData[] | undefined }) {
       .attr("stroke", "blue")
       .attr("stroke-width", 1.5)
       .attr("d", line);
-
-    // chart
-    //   .append("g")
-    //   .attr("transform", `translate(0, ${height})`)
-    //   .call(
-    //     d3
-    //       .axisBottom(xScale)
-    //       .ticks(d3.timeDay.every(1))
-    //       .tickFormat(d3.timeFormat("%b %d"))
-    //   );
 
     chart.append("g").call(d3.axisLeft(yScale));
   }, [data]);
