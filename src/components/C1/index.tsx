@@ -2,6 +2,7 @@ import { cFmt, defaultData, pFmt1, pFmt2, pFmtWhole } from "./data";
 import * as d3 from "d3";
 import { motion, useScroll } from "framer-motion";
 import {
+  addDays,
   eachMonthOfInterval,
   endOfMonth,
   format,
@@ -70,6 +71,8 @@ type AssetHistory = {
   totalValue: number;
 };
 
+type FlatTransactions = { date: Date; value: number; name: string };
+
 function Gain(value: number, cost: number) {
   return value - cost;
 }
@@ -79,9 +82,11 @@ function Return(value: number, cost: number) {
 
 export function Body() {
   const [portfolio, setPortfolio] = useState(defaultData);
+  console.log(portfolio);
 
   const marketHistories = useQueries({
     queries: portfolio.map((item) => ({
+      staleTime: 60 * 60 * 1000,
       queryKey: ["marketHistory", item.name],
       queryFn: () => getMarketHistory(item.name),
     })),
@@ -163,10 +168,25 @@ export function Body() {
         ans[idx].value += a.history[i].value;
       }
     }
+    if (ans.length > 0)
+      ans.push({ date: addDays(ans[ans.length - 1].date, -1), value: 0 });
     ans.reverse();
     return ans;
   }
   const timeSeriesData = calculateTimeSeriesData(assetHistory);
+
+  const flatTransactions = Object.values(portfolio)
+    .flatMap((p) =>
+      p.buyHistory.map((t) => {
+        return {
+          date: t.date,
+          value: t.value,
+          name: p.name,
+        } as FlatTransactions;
+      })
+    )
+    .sort((a, b) => a.date.getTime() - b.date.getTime());
+  console.log(flatTransactions);
 
   return (
     <div className="gap-6 m-4 md:p-8 grid grid-cols-1 md:grid-cols-3">
@@ -187,10 +207,10 @@ export function Body() {
       <IndicatorLg name="Return">
         <ColorPercent value={Return(sumTotalValue, sumTotalCost)} />
       </IndicatorLg>
-      <IndicatorSm name="NetCashFlow">
-        <ColorMoney value={sumTotalCost} />
+      <IndicatorSm name="Net Cash Flow">
+        <Money value={sumTotalCost} />
       </IndicatorSm>
-      <IndicatorSm name="MarketGain">
+      <IndicatorSm name="Market Gain">
         <ColorMoney value={Gain(sumTotalValue, sumTotalCost)} />
       </IndicatorSm>
       <IndicatorSm name="Earned Staking">
@@ -210,6 +230,30 @@ export function Body() {
           <SliceTableRow summary={summary} key={summary.name} />
         ))}
       </div>
+      <div className="col-span-1 md:col-span-3">
+        <h3 className="font-bold text-xl ">Transactions</h3>
+        <TransactionTableHeader />
+        {flatTransactions.map((t) => (
+          <div
+            key={`${t.name}-${t.date}-${t.value}`}
+            className="grid grid-cols-3 bg-cyan-950 text-cyan-100 justify-items-center p-1 items-center"
+          >
+            <div>{t.name}</div>
+            <div>{t.date.toDateString()}</div>
+            <div>{t.value}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TransactionTableHeader() {
+  return (
+    <div className="grid grid-cols-3 bg-cyan-900 p-2 text-cyan-300 rounded-t-md items-center justify-items-center">
+      <div>Name</div>
+      <div>Date</div>
+      <div>Value</div>
     </div>
   );
 }
@@ -232,24 +276,6 @@ function SliceTableHeader() {
   );
 }
 
-function Money({ value }: { value: number }) {
-  return <div className="text-white">{cFmt.format(value)}</div>;
-}
-function ColorMoney({ value }: { value: number }) {
-  if (value > 0)
-    return <div className="text-green-500">{cFmt.format(value)}</div>;
-  else if (value < 0)
-    return <div className="text-red-500">{cFmt.format(value)}</div>;
-  else return <div className="text-white">{cFmt.format(value)}</div>;
-}
-function ColorPercent({ value }: { value: number }) {
-  if (value > 0)
-    return <div className="text-green-500">{pFmt1.format(value)}</div>;
-  else if (value < 0)
-    return <div className="text-red-500">{pFmt1.format(value)}</div>;
-  else return <div className="text-white">{pFmt1.format(value)}</div>;
-}
-
 function SliceTableRow({ summary }: { summary: AssetHistory }) {
   return (
     <div className="grid grid-cols-5 bg-cyan-950 text-cyan-100 justify-items-center p-1 items-center">
@@ -266,6 +292,24 @@ function SliceTableRow({ summary }: { summary: AssetHistory }) {
       <div>...</div>
     </div>
   );
+}
+
+function Money({ value }: { value: number }) {
+  return <div className="text-white">{cFmt.format(value)}</div>;
+}
+function ColorMoney({ value }: { value: number }) {
+  if (value > 0)
+    return <div className="text-green-500">{cFmt.format(value)}</div>;
+  else if (value < 0)
+    return <div className="text-red-500">{cFmt.format(value)}</div>;
+  else return <div className="text-white">{cFmt.format(value)}</div>;
+}
+function ColorPercent({ value }: { value: number }) {
+  if (value > 0)
+    return <div className="text-green-500">{pFmt1.format(value)}</div>;
+  else if (value < 0)
+    return <div className="text-red-500">{pFmt1.format(value)}</div>;
+  else return <div className="text-white">{pFmt1.format(value)}</div>;
 }
 
 function IndicatorLg({
