@@ -82,7 +82,6 @@ function Return(value: number, cost: number) {
 
 export function Body() {
   const [portfolio, setPortfolio] = useState(defaultData);
-  console.log(portfolio);
 
   const marketHistories = useQueries({
     queries: portfolio.map((item) => ({
@@ -186,7 +185,6 @@ export function Body() {
       })
     )
     .sort((a, b) => a.date.getTime() - b.date.getTime());
-  console.log(flatTransactions);
 
   return (
     <div className="gap-6 m-4 md:p-8 grid grid-cols-1 md:grid-cols-3">
@@ -346,6 +344,9 @@ function TimeSeriesChart({ data }: { data: TimeSeriesData[] | undefined }) {
   const chartRef = useRef<SVGSVGElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
+  const [clicked, setClicked] = useState(false);
+  const [highlighted, setHighlighted] = useState<number | null>(null);
+
   useEffect(() => {
     const chart = d3.select(chartRef.current);
     const handleResize = () => {
@@ -389,9 +390,59 @@ function TimeSeriesChart({ data }: { data: TimeSeriesData[] | undefined }) {
       .attr("stroke", "white")
       .attr("stroke-width", 2)
       .attr("d", line);
+    chart
+      .selectAll("circle")
+      .data(data)
+      .enter()
+      .append("circle")
+      .attr("cx", (d) => xScale(d.date))
+      .attr("cy", (d) => yScale(d.value))
+      .attr("r", 5)
+      .attr("fill", "white")
+      .attr("fill-opacity", 0);
 
-    chart.append("g").call(d3.axisLeft(yScale));
-  }, [data]);
+    const onMouseClick = (event: MouseEvent) => {
+      if (!clicked) {
+        setClicked(true);
+      }
+      const [xCoord] = d3.pointer(event);
+      const bisect = d3.bisector<TimeSeriesData, Date>((d) => d.date).left;
+      const index = bisect(data, xScale.invert(xCoord));
+      setHighlighted(index);
+    };
+
+    chart.on("click", onMouseClick);
+
+    if (clicked && highlighted) {
+      chart
+        .selectAll("circle")
+        .attr("fill-opacity", (_, i) => (i === highlighted ? 1 : 0));
+
+      chart
+        .selectAll("rect")
+        .data(
+          highlighted !== 0
+            ? [
+                {
+                  left: data[highlighted - 1].date,
+                  right: data[highlighted].date,
+                },
+              ]
+            : []
+        )
+        .join("rect")
+        .attr("x", (d) => xScale(d.left))
+        .attr("y", 0)
+        .attr("width", (d) => (xScale(d.right) - xScale(d.left)) * 2)
+        .attr("height", dimensions.height)
+        .attr("fill", "white")
+        .attr("fill-opacity", 0.2);
+    }
+
+    return () => {
+      chart.selectAll("*").remove();
+    };
+  }, [data, clicked, highlighted]);
 
   return <svg ref={chartRef} className="w-full h-full" />;
 }
