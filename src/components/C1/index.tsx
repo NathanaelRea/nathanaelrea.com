@@ -18,7 +18,14 @@ import {
 } from "@tanstack/react-query";
 import axios from "axios";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { Children, ReactNode, useEffect, useRef, useState } from "react";
+import {
+  Children,
+  ReactNode,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { svg } from "d3";
 
 type LocalStorage = {
@@ -343,8 +350,6 @@ function IndicatorSm({
 function TimeSeriesChart({ data }: { data: TimeSeriesData[] | undefined }) {
   const chartRef = useRef<SVGSVGElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-
-  const [clicked, setClicked] = useState(false);
   const [highlighted, setHighlighted] = useState<number | null>(null);
 
   useEffect(() => {
@@ -365,6 +370,7 @@ function TimeSeriesChart({ data }: { data: TimeSeriesData[] | undefined }) {
 
   useEffect(() => {
     if (chartRef.current == null || data == undefined) return;
+    const rectWidth = dimensions.width / data.length;
 
     const chart = d3.select(chartRef.current);
 
@@ -390,59 +396,45 @@ function TimeSeriesChart({ data }: { data: TimeSeriesData[] | undefined }) {
       .attr("stroke", "white")
       .attr("stroke-width", 2)
       .attr("d", line);
+
     chart
       .selectAll("circle")
       .data(data)
       .enter()
       .append("circle")
+      .attr("r", 5)
       .attr("cx", (d) => xScale(d.date))
       .attr("cy", (d) => yScale(d.value))
-      .attr("r", 5)
       .attr("fill", "white")
-      .attr("fill-opacity", 0);
+      .attr("opacity", (_, i) => (i === highlighted ? 1 : 0));
 
-    const onMouseClick = (event: MouseEvent) => {
-      if (!clicked) {
-        setClicked(true);
-      }
+    chart
+      .selectAll("rect")
+      .data(data)
+      .enter()
+      .append("rect")
+      .attr("width", 2 * rectWidth)
+      .attr("height", dimensions.height)
+      .attr("x", (d) => xScale(d.date) - rectWidth)
+      .attr("y", 0)
+      .style("fill", "white")
+      .attr("fill-opacity", (_, i) => (i === highlighted ? 0.2 : 0))
+      .on("mouseover", (d) => {
+        onMouseOver(d);
+      })
+      .on("mouseout", () => setHighlighted(null));
+
+    const onMouseOver = (event: MouseEvent) => {
       const [xCoord] = d3.pointer(event);
       const bisect = d3.bisector<TimeSeriesData, Date>((d) => d.date).left;
       const index = bisect(data, xScale.invert(xCoord));
       setHighlighted(index);
     };
 
-    chart.on("click", onMouseClick);
-
-    if (clicked && highlighted) {
-      chart
-        .selectAll("circle")
-        .attr("fill-opacity", (_, i) => (i === highlighted ? 1 : 0));
-
-      chart
-        .selectAll("rect")
-        .data(
-          highlighted !== 0
-            ? [
-                {
-                  left: data[highlighted - 1].date,
-                  right: data[highlighted].date,
-                },
-              ]
-            : []
-        )
-        .join("rect")
-        .attr("x", (d) => xScale(d.left))
-        .attr("y", 0)
-        .attr("width", (d) => (xScale(d.right) - xScale(d.left)) * 2)
-        .attr("height", dimensions.height)
-        .attr("fill", "white")
-        .attr("fill-opacity", 0.2);
-    }
-
     return () => {
       chart.selectAll("*").remove();
     };
-  }, [data, clicked, highlighted]);
+  }, [data, highlighted, dimensions]);
 
   return <svg ref={chartRef} className="w-full h-full" />;
 }
@@ -472,7 +464,7 @@ function PieChart({ data }: { data: Data[] }) {
   useEffect(() => {
     if (!data) return;
 
-    const svg = d3.select(ref.current);
+    const chart = d3.select(ref.current);
     const pie = d3
       .pie<Data>()
       .value((d) => d.value)
@@ -487,7 +479,7 @@ function PieChart({ data }: { data: Data[] }) {
 
     const arcs = pie(data);
 
-    const g = svg
+    const g = chart
       .append("g")
       .attr(
         "transform",
@@ -501,7 +493,11 @@ function PieChart({ data }: { data: Data[] }) {
       .attr("d", arc)
       .append("title")
       .text((d) => `${d.data.label}: ${d.data.value}`);
-  }, [data]);
+
+    return () => {
+      chart.selectAll("*").remove();
+    };
+  }, [data, dimensions]);
 
   return <svg ref={ref} className="w-full h-full" />;
 }
