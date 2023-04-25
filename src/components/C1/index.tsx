@@ -21,6 +21,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import {
   Children,
   ReactNode,
+  RefObject,
   useCallback,
   useEffect,
   useRef,
@@ -349,24 +350,22 @@ function IndicatorSm({
 
 function TimeSeriesChart({ data }: { data: TimeSeriesData[] | undefined }) {
   const chartRef = useRef<SVGSVGElement>(null);
-  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [highlighted, setHighlighted] = useState<number | null>(null);
+  const { dimensions } = useBoundingRect(chartRef);
 
-  useEffect(() => {
-    const chart = d3.select(chartRef.current);
-    const handleResize = () => {
-      setDimensions({
-        width: chart.node()?.getBoundingClientRect().width ?? 0,
-        height: chart.node()?.getBoundingClientRect().height ?? 0,
-      });
-    };
+  const handleMouseOver = useCallback(
+    (event: MouseEvent) => {
+      const target = event.target as SVGRectElement;
+      const dIndex = target.getAttribute("data-index");
+      const index = dIndex == null ? null : parseInt(dIndex);
+      setHighlighted(index);
+    },
+    [setHighlighted]
+  );
 
-    handleResize();
-
-    window.addEventListener("resize", handleResize);
-
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  const handleMouseOut = useCallback(() => {
+    setHighlighted(null);
+  }, [setHighlighted]);
 
   useEffect(() => {
     if (chartRef.current == null || data == undefined) return;
@@ -418,18 +417,10 @@ function TimeSeriesChart({ data }: { data: TimeSeriesData[] | undefined }) {
       .attr("x", (d) => xScale(d.date) - rectWidth)
       .attr("y", 0)
       .style("fill", "white")
-      .attr("fill-opacity", (_, i) => (i === highlighted ? 0.2 : 0))
-      .on("mouseover", (d) => {
-        onMouseOver(d);
-      })
-      .on("mouseout", () => setHighlighted(null));
-
-    const onMouseOver = (event: MouseEvent) => {
-      const [xCoord] = d3.pointer(event);
-      const bisect = d3.bisector<TimeSeriesData, Date>((d) => d.date).left;
-      const index = bisect(data, xScale.invert(xCoord));
-      setHighlighted(index);
-    };
+      .attr("fill-opacity", (_, i) => (i === highlighted ? 0.25 : 0))
+      .on("mouseover", handleMouseOver)
+      .on("mouseout", handleMouseOut)
+      .attr("data-index", (_, i) => i);
 
     return () => {
       chart.selectAll("*").remove();
@@ -442,29 +433,13 @@ function TimeSeriesChart({ data }: { data: TimeSeriesData[] | undefined }) {
 type Data = { label: string; value: number };
 
 function PieChart({ data }: { data: Data[] }) {
-  const ref = useRef<SVGSVGElement>(null);
-  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-
-  useEffect(() => {
-    const chart = d3.select(ref.current);
-    const handleResize = () => {
-      setDimensions({
-        width: chart.node()?.getBoundingClientRect().width ?? 0,
-        height: chart.node()?.getBoundingClientRect().height ?? 0,
-      });
-    };
-
-    handleResize();
-
-    window.addEventListener("resize", handleResize);
-
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  const chartRef = useRef<SVGSVGElement>(null);
+  const { dimensions } = useBoundingRect(chartRef);
 
   useEffect(() => {
     if (!data) return;
 
-    const chart = d3.select(ref.current);
+    const chart = d3.select(chartRef.current);
     const pie = d3
       .pie<Data>()
       .value((d) => d.value)
@@ -499,5 +474,24 @@ function PieChart({ data }: { data: Data[] }) {
     };
   }, [data, dimensions]);
 
-  return <svg ref={ref} className="w-full h-full" />;
+  return <svg ref={chartRef} className="w-full h-full" />;
+}
+
+function useBoundingRect(chartRef: RefObject<SVGSVGElement>) {
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+
+  useEffect(() => {
+    const chart = d3.select(chartRef.current);
+    const handleResize = () => {
+      setDimensions({
+        width: chart.node()?.getBoundingClientRect().width ?? 0,
+        height: chart.node()?.getBoundingClientRect().height ?? 0,
+      });
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  return { dimensions };
 }
