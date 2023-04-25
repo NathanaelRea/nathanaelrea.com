@@ -1,6 +1,6 @@
 import { HexGrid, Layout, Hexagon } from "react-hexgrid";
 import type { Player } from ".";
-import { useWindowSize } from "../../hooks/useWindowSize";
+import { useWindowSize } from "./hooks/useWindowSize";
 
 export default function BaseGrid({ players }: { players: Player[] }) {
   const { width, height } = useWindowSize();

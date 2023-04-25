@@ -1,7 +1,7 @@
 import type { Hex } from "react-hexgrid";
 import { GridGenerator } from "react-hexgrid";
-import { playerColors } from "../../data/colors";
-import { HEX_DIRECTIONS } from "../../data/constants";
+import { playerColors } from "./data/colors";
+import { HEX_DIRECTIONS } from "./data/constants";
 import BaseGrid from "./BaseGrid";
 
 const HEX_GRID_RADIUS = 9;
