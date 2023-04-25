@@ -1,25 +1,15 @@
-import { cFmt, defaultData, pFmt1, pFmt2, pFmtWhole } from "./data";
+import { cFmt, defaultData, pFmt1 } from "./data";
 import * as d3 from "d3";
-import { motion, useScroll } from "framer-motion";
-import {
-  addDays,
-  eachMonthOfInterval,
-  endOfMonth,
-  format,
-  isSameMonth,
-  parseISO,
-  startOfMonth,
-} from "date-fns";
+// import { motion, useScroll } from "framer-motion";
+import { addDays } from "date-fns";
 import {
   QueryClient,
   QueryClientProvider,
   useQueries,
-  useQuery,
 } from "@tanstack/react-query";
 import axios from "axios";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import {
-  Children,
   ReactNode,
   RefObject,
   useCallback,
@@ -27,7 +17,6 @@ import {
   useRef,
   useState,
 } from "react";
-import { svg } from "d3";
 
 type LocalStorage = {
   crypto: Purchases;
@@ -98,6 +87,7 @@ export function Body() {
       queryFn: () => getMarketHistory(item.name),
     })),
   });
+  const isLoading = marketHistories.some((r) => r.isLoading);
   const timeSeriesMap = marketHistories.reduce(
     (acc: { [key: string]: TimeSeriesData[] }, val, idx) => {
       const k = portfolio[idx].name;
@@ -223,18 +213,22 @@ export function Body() {
         <ColorMoney value={0} />
       </IndicatorSm>
       <div className="bg-gray-700 rounded-md p-2 md:col-span-3 col-span-1 lg:col-span-1 aspect-square">
-        <PieChart data={pieChartData} />
+        {isLoading ? <Loading /> : <PieChart data={pieChartData} />}
       </div>
       <div className="bg-gray-800 font-bold text-xl p-2 rounded-md col-span-1 md:col-span-3 lg:col-span-2">
-        <TimeSeriesChart data={timeSeriesData} />
+        {isLoading ? <Loading /> : <TimeSeriesChart data={timeSeriesData} />}
       </div>
       <div className="col-span-1 md:col-span-3">
         <h3 className="font-bold text-xl ">Slices</h3>
         <input className="rounded-sm" placeholder="250" />
         <SliceTableHeader />
-        {assetHistory.map((summary) => (
-          <SliceTableRow summary={summary} key={summary.name} />
-        ))}
+        {isLoading ? (
+          <Loading />
+        ) : (
+          assetHistory.map((summary) => (
+            <SliceTableRow summary={summary} key={summary.name} />
+          ))
+        )}
       </div>
       <div className="col-span-1 md:col-span-3">
         <h3 className="font-bold text-xl ">Transactions</h3>
@@ -348,6 +342,37 @@ function IndicatorSm({
   );
 }
 
+function Loading() {
+  return (
+    <div className="flex flex-shrink">
+      <div
+        className="animate-bounce transform -translate-y-1/4"
+        style={{
+          animationDelay: "250ms",
+        }}
+      >
+        .
+      </div>
+      <div
+        className="animate-bounce transform -translate-y-1/4"
+        style={{
+          animationDelay: "500ms",
+        }}
+      >
+        .
+      </div>
+      <div
+        className="animate-bounce transform -translate-y-1/4"
+        style={{
+          animationDelay: "750ms",
+        }}
+      >
+        .
+      </div>
+    </div>
+  );
+}
+
 function TimeSeriesChart({ data }: { data: TimeSeriesData[] | undefined }) {
   const chartRef = useRef<SVGSVGElement>(null);
   const [highlighted, setHighlighted] = useState<number | null>(null);
@@ -427,7 +452,28 @@ function TimeSeriesChart({ data }: { data: TimeSeriesData[] | undefined }) {
     };
   }, [data, highlighted, dimensions]);
 
-  return <svg ref={chartRef} className="w-full h-full" />;
+  const curData =
+    data == null || highlighted == null ? null : data[highlighted];
+
+  return (
+    <div className="relative w-full h-full">
+      <svg ref={chartRef} className="w-full h-full"></svg>
+      {curData != null && (
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            padding: "5px",
+          }}
+        >
+          <p>{`${curData.date.toLocaleDateString()} - ${cFmt.format(
+            curData.value
+          )}`}</p>
+        </div>
+      )}
+    </div>
+  );
 }
 
 type Data = { label: string; value: number };
