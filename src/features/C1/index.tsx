@@ -495,8 +495,8 @@ function PieChart({ slices }: { slices: Slice[] }) {
   const { dimensions } = useBoundingRect(chartRef);
 
   const maxDiameter = Math.min(dimensions.height, dimensions.width);
-  const innerRadius = maxDiameter / 4.5;
-  const minRadius = maxDiameter / 4;
+  const innerRadius = maxDiameter / 3.5;
+  const minRadius = maxDiameter / 3;
   const maxRadius = maxDiameter / 2.25;
   const radiusDelta = maxRadius - minRadius;
 
