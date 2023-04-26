@@ -60,12 +60,22 @@ const getMarketHistory = async (name: string) => {
   return res.data as MarketChartResponse;
 };
 
-type AssetHistory = {
+type Asset = {
   symbol: string;
   name: string;
   history: TimeSeriesData[];
   totalSpent: number;
   totalValue: number;
+  percentTarget: number;
+};
+
+type Slice = {
+  symbol: string;
+  totalValue: number;
+  gain: number;
+  return: number;
+  targetPercent: number;
+  actualPercent: number;
 };
 
 type TargetPercent = {
@@ -83,11 +93,6 @@ function Return(value: number, cost: number) {
 
 export function Body() {
   const [portfolio, setPortfolio] = useState(defaultData);
-
-  const targetPercent = portfolio.reduce((acc: TargetPercent, val) => {
-    acc[val.symbol] = val.percentTarget;
-    return acc;
-  }, {});
 
   const marketHistories = useQueries({
     queries: portfolio.map((item) => ({
@@ -110,7 +115,7 @@ export function Body() {
     {}
   );
 
-  const assetHistory: AssetHistory[] = portfolio.map((p) => {
+  const assets: Asset[] = portfolio.map((p) => {
     if (!Object.hasOwn(timeSeriesMap, p.name))
       return {
         symbol: p.symbol,
@@ -118,7 +123,8 @@ export function Body() {
         history: [],
         totalValue: 0,
         totalSpent: 0,
-      } as AssetHistory;
+        percentTarget: p.percentTarget,
+      } as Asset;
     const market = timeSeriesMap[p.name];
     const history = [] as TimeSeriesData[];
     let totalSpent = 0;
@@ -146,26 +152,25 @@ export function Body() {
       history,
       totalValue: history[history.length - 1].value,
       totalSpent,
-    } as AssetHistory;
+      percentTarget: p.percentTarget,
+    } as Asset;
   });
 
-  const sumTotalValue = assetHistory.reduce(
-    (acc, val) => acc + val.totalValue,
-    0
-  );
-  const sumTotalCost = assetHistory.reduce(
-    (acc, val) => acc + val.totalSpent,
-    0
-  );
+  const sumTotalValue = assets.reduce((acc, val) => acc + val.totalValue, 0);
+  const sumTotalCost = assets.reduce((acc, val) => acc + val.totalSpent, 0);
 
-  const pieChartData = assetHistory.map((a) => {
+  const slices: Slice[] = assets.map((a) => {
     return {
-      label: a.symbol,
-      value: a.totalValue / sumTotalValue,
+      symbol: a.symbol,
+      totalValue: a.totalValue,
+      gain: Gain(a.totalValue, a.totalSpent),
+      return: Return(a.totalValue, a.totalSpent),
+      targetPercent: a.percentTarget,
+      actualPercent: a.totalValue / sumTotalValue,
     };
   });
 
-  function calculateTimeSeriesData(assetHistory: AssetHistory[]) {
+  function calculateTimeSeriesData(assetHistory: Asset[]) {
     const ans = [] as TimeSeriesData[];
     for (const a of assetHistory) {
       for (let i = a.history.length - 1; i >= 0; i--) {
@@ -179,7 +184,7 @@ export function Body() {
     ans.reverse();
     return ans;
   }
-  const timeSeriesData = calculateTimeSeriesData(assetHistory);
+  const timeSeriesData = calculateTimeSeriesData(assets);
 
   const flatTransactions = Object.values(portfolio)
     .flatMap((p) =>
@@ -225,11 +230,7 @@ export function Body() {
           </IndicatorSm>
         </div>
         <div className="bg-gray-700 rounded-md p-2 aspect-square self-center">
-          {isLoading ? (
-            <Loading />
-          ) : (
-            <PieChart data={pieChartData} targetPercent={targetPercent} />
-          )}
+          {isLoading ? <Loading /> : <PieChart slices={slices} />}
         </div>
         <div className="bg-gray-800 font-bold text-xl p-2 rounded-md col-span-2">
           {isLoading ? <Loading /> : <TimeSeriesChart data={timeSeriesData} />}
@@ -241,8 +242,8 @@ export function Body() {
           {isLoading ? (
             <Loading />
           ) : (
-            assetHistory.map((summary) => (
-              <SliceTableRow summary={summary} key={summary.name} />
+            slices.map((slice) => (
+              <SliceTableRow slice={slice} key={slice.symbol} />
             ))
           )}
         </div>
@@ -293,18 +294,18 @@ function SliceTableHeader() {
   );
 }
 
-function SliceTableRow({ summary }: { summary: AssetHistory }) {
+function SliceTableRow({ slice }: { slice: Slice }) {
   return (
     <div className="grid grid-cols-5 bg-cyan-950 text-cyan-100 justify-items-center p-1 items-center">
-      <div>{summary.symbol}</div>
-      <ColorMoney value={summary.totalValue} />
+      <div>{slice.symbol}</div>
+      <ColorMoney value={slice.totalValue} />
       <div className="flex flex-col items-end">
-        <ColorMoney value={Gain(summary.totalValue, summary.totalSpent)} />
-        <ColorPercent value={Return(summary.totalValue, summary.totalSpent)} />
+        <ColorMoney value={slice.gain} />
+        <ColorPercent value={slice.return} />
       </div>
       <div className="flex flex-col items-end">
-        <div>Actual</div>
-        <div>Target</div>
+        <ColorPercent value={slice.actualPercent} />
+        <ColorPercent value={slice.targetPercent} />
       </div>
       <div>...</div>
     </div>
@@ -488,13 +489,7 @@ function TimeSeriesChart({ data }: { data: TimeSeriesData[] | undefined }) {
 
 type Data = { label: string; value: number };
 
-function PieChart({
-  data,
-  targetPercent,
-}: {
-  data: Data[];
-  targetPercent: TargetPercent;
-}) {
+function PieChart({ slices }: { slices: Slice[] }) {
   const chartRef = useRef<SVGSVGElement>(null);
   const [highlighted, setHighlighted] = useState<number | null>(null);
   const { dimensions } = useBoundingRect(chartRef);
@@ -504,6 +499,17 @@ function PieChart({
   const minRadius = maxDiameter / 4;
   const maxRadius = maxDiameter / 2.25;
   const radiusDelta = maxRadius - minRadius;
+
+  const data = slices.map((s) => {
+    return {
+      label: s.symbol,
+      value: s.actualPercent,
+    };
+  });
+  const targetPercent = slices.reduce((acc: TargetPercent, val) => {
+    acc[val.symbol] = val.targetPercent;
+    return acc;
+  }, {});
 
   const handleMouseOver = useCallback(
     function (e: MouseEvent, d: d3.PieArcDatum<Data>) {
