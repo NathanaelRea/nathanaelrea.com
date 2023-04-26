@@ -443,33 +443,25 @@ function TimeSeriesChart({ data }: { data: TimeSeriesData[] | undefined }) {
       .attr("y", 0)
       .style("fill", "white")
       .attr("fill-opacity", (_, i) => (i === highlighted ? 0.25 : 0))
-      .on("mouseover", handleMouseOver)
-      .on("mouseout", handleMouseOut)
+      .on("mouseenter", handleMouseOver)
+      .on("mouseleave", handleMouseOut)
       .attr("data-index", (_, i) => i);
 
     return () => {
       chart.selectAll("*").remove();
     };
-  }, [data, highlighted, dimensions]);
+  }, [data, highlighted, setHighlighted, dimensions]);
 
   const curData =
     data == null || highlighted == null ? null : data[highlighted];
 
   return (
     <div className="relative w-full h-full">
-      <svg ref={chartRef} className="w-full h-full"></svg>
+      <svg ref={chartRef} className="w-full h-full" />
       {curData != null && (
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            padding: "5px",
-          }}
-        >
-          <p>{`${curData.date.toLocaleDateString()} - ${cFmt.format(
-            curData.value
-          )}`}</p>
+        <div className="absolute top-0 left-0">
+          <p>{curData.date.toLocaleDateString()}</p>
+          <p>{cFmt.format(curData.value)}</p>
         </div>
       )}
     </div>
@@ -480,12 +472,33 @@ type Data = { label: string; value: number };
 
 function PieChart({ data }: { data: Data[] }) {
   const chartRef = useRef<SVGSVGElement>(null);
+  const [highlighted, setHighlighted] = useState<number | null>(null);
   const { dimensions } = useBoundingRect(chartRef);
 
-  useEffect(() => {
-    if (!data) return;
+  const maxDiameter = Math.min(dimensions.height, dimensions.width);
+  const minRadius = maxDiameter / 4;
+  const maxRadius = maxDiameter / 2.25;
+  const radiusDelta = maxRadius - minRadius;
 
-    const chart = d3.select(chartRef.current);
+  const handleMouseOver = useCallback(
+    function (e: MouseEvent, d: d3.PieArcDatum<Data>) {
+      setHighlighted(d.index);
+    },
+    [setHighlighted]
+  );
+
+  const handleMouseOut = useCallback(
+    function () {
+      setHighlighted(null);
+    },
+    [setHighlighted]
+  );
+
+  useEffect(() => {
+    if (chartRef.current == null || data == undefined) return;
+
+    const svg = d3.select(chartRef.current);
+
     const pie = d3
       .pie<Data>()
       .value((d) => d.value)
@@ -493,34 +506,59 @@ function PieChart({ data }: { data: Data[] }) {
 
     const arc = d3
       .arc<d3.PieArcDatum<Data>>()
-      .innerRadius(Math.min(dimensions.height, dimensions.width) / 5)
-      .outerRadius(Math.min(dimensions.height, dimensions.width) / 2.5);
+      .innerRadius(minRadius)
+      .outerRadius((d) => minRadius + (radiusDelta * (d.index + 1)) / 3);
 
-    const color = d3.scaleOrdinal<string, string>(d3.schemeCategory10);
+    const color = d3.scaleOrdinal<string, string>(d3.schemeDark2);
+    const getHighlightedColor = (d: d3.PieArcDatum<Data>, index: number) => {
+      const hslColor = d3.hsl(color(d.data.label));
+      return highlighted === index
+        ? hslColor.brighter(0.25).toString()
+        : hslColor.toString();
+    };
 
-    const arcs = pie(data);
-
-    const g = chart
+    const chart = svg
       .append("g")
       .attr(
         "transform",
         `translate(${dimensions.width / 2}, ${dimensions.height / 2})`
       );
 
-    g.selectAll("path")
-      .data(arcs)
-      .join("path")
-      .attr("fill", (d) => color(d.data.label))
+    const paths = chart
+      .selectAll("path")
+      .data(pie(data))
+      .enter()
+      .append("path");
+
+    paths
       .attr("d", arc)
-      .append("title")
-      .text((d) => `${d.data.label}: ${d.data.value}`);
+      .attr("fill", (d, i) => getHighlightedColor(d, i))
+      .on("mouseenter", handleMouseOver)
+      .on("mouseleave", handleMouseOut);
 
     return () => {
-      chart.selectAll("*").remove();
+      svg.selectAll("*").remove();
     };
-  }, [data, dimensions]);
+  }, [data, highlighted, dimensions, handleMouseOut, handleMouseOver]);
 
-  return <svg ref={chartRef} className="w-full h-full" />;
+  const curData = highlighted == null ? null : data[highlighted];
+  console.log(highlighted);
+
+  return (
+    <div className="relative w-full h-full">
+      <svg ref={chartRef} className="w-full h-full" />
+      {curData != null && (
+        <div
+          className={`absolute top-0 left-0 w-full h-full flex justify-center items-center pointer-events-none`}
+        >
+          <div className="text-center">
+            <div>{curData.label}</div>
+            <div>{pFmt1.format(curData.value)}</div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 function useBoundingRect(chartRef: RefObject<SVGSVGElement>) {
