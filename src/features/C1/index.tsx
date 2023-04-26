@@ -185,64 +185,68 @@ export function Body() {
     .sort((a, b) => a.date.getTime() - b.date.getTime());
 
   return (
-    <div className="gap-6 m-4 md:p-8 grid grid-cols-1 md:grid-cols-3">
-      <div className="col-span-1 md:col-span-3">
-        <div className="flex gap-2">
-          <h1 className="font-bold text-2xl">Portfolio</h1>
-          <button className="bg-cyan-800 px-2 py-1 rounded-md hover:bg-cyan-700">
-            Import
-          </button>
-        </div>
-      </div>
-      <IndicatorLg name="Current Value">
-        <Money value={sumTotalValue} />
-      </IndicatorLg>
-      <IndicatorLg name="Gain">
-        <ColorMoney value={Gain(sumTotalValue, sumTotalCost)} />
-      </IndicatorLg>
-      <IndicatorLg name="Return">
-        <ColorPercent value={Return(sumTotalValue, sumTotalCost)} />
-      </IndicatorLg>
-      <IndicatorSm name="Net Cash Flow">
-        <Money value={sumTotalCost} />
-      </IndicatorSm>
-      <IndicatorSm name="Market Gain">
-        <ColorMoney value={Gain(sumTotalValue, sumTotalCost)} />
-      </IndicatorSm>
-      <IndicatorSm name="Earned Staking">
-        <ColorMoney value={0} />
-      </IndicatorSm>
-      <div className="bg-gray-700 rounded-md p-2 md:col-span-3 col-span-1 lg:col-span-1 aspect-square">
-        {isLoading ? <Loading /> : <PieChart data={pieChartData} />}
-      </div>
-      <div className="bg-gray-800 font-bold text-xl p-2 rounded-md col-span-1 md:col-span-3 lg:col-span-2">
-        {isLoading ? <Loading /> : <TimeSeriesChart data={timeSeriesData} />}
-      </div>
-      <div className="col-span-1 md:col-span-3">
-        <h3 className="font-bold text-xl ">Slices</h3>
-        <input className="rounded-sm" placeholder="250" />
-        <SliceTableHeader />
-        {isLoading ? (
-          <Loading />
-        ) : (
-          assetHistory.map((summary) => (
-            <SliceTableRow summary={summary} key={summary.name} />
-          ))
-        )}
-      </div>
-      <div className="col-span-1 md:col-span-3">
-        <h3 className="font-bold text-xl ">Transactions</h3>
-        <TransactionTableHeader />
-        {flatTransactions.map((t) => (
-          <div
-            key={`${t.name}-${t.date}-${t.value}`}
-            className="grid grid-cols-3 bg-cyan-950 text-cyan-100 justify-items-center p-1 items-center"
-          >
-            <div>{t.name}</div>
-            <div>{t.date.toDateString()}</div>
-            <div>{t.value}</div>
+    <div className="flex justify-center w-full">
+      <div className="gap-6 m-4 sm:p-8 grid grid-cols-2 sm:grid-cols-3 flex-grow max-w-screen-xl">
+        <div className="col-span-2 sm:col-span-3">
+          <div className="flex gap-2">
+            <h1 className="font-bold text-2xl">Portfolio</h1>
+            <button className="bg-cyan-800 px-2 py-1 rounded-md hover:bg-cyan-700">
+              Import
+            </button>
           </div>
-        ))}
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 sm:col-span-3">
+          <IndicatorLg name="Current Value">
+            <Money value={sumTotalValue} />
+          </IndicatorLg>
+          <IndicatorLg name="Gain">
+            <ColorMoney value={Gain(sumTotalValue, sumTotalCost)} />
+          </IndicatorLg>
+          <IndicatorLg name="Return">
+            <ColorPercent value={Return(sumTotalValue, sumTotalCost)} />
+          </IndicatorLg>
+          <IndicatorSm name="Net Cash Flow">
+            <Money value={sumTotalCost} />
+          </IndicatorSm>
+          <IndicatorSm name="Market Gain">
+            <ColorMoney value={Gain(sumTotalValue, sumTotalCost)} />
+          </IndicatorSm>
+          <IndicatorSm name="Earned Staking">
+            <ColorMoney value={0} />
+          </IndicatorSm>
+        </div>
+        <div className="bg-gray-700 rounded-md p-2 aspect-square self-center">
+          {isLoading ? <Loading /> : <PieChart data={pieChartData} />}
+        </div>
+        <div className="bg-gray-800 font-bold text-xl p-2 rounded-md col-span-2">
+          {isLoading ? <Loading /> : <TimeSeriesChart data={timeSeriesData} />}
+        </div>
+        <div className="col-span-2 sm:col-span-3">
+          <h3 className="font-bold text-xl ">Slices</h3>
+          <input className="rounded-sm" placeholder="250" />
+          <SliceTableHeader />
+          {isLoading ? (
+            <Loading />
+          ) : (
+            assetHistory.map((summary) => (
+              <SliceTableRow summary={summary} key={summary.name} />
+            ))
+          )}
+        </div>
+        <div className="col-span-2 sm:col-span-3">
+          <h3 className="font-bold text-xl ">Transactions</h3>
+          <TransactionTableHeader />
+          {flatTransactions.map((t) => (
+            <div
+              key={`${t.name}-${t.date}-${t.value}`}
+              className="grid grid-cols-3 bg-cyan-950 text-cyan-100 justify-items-center p-1 items-center"
+            >
+              <div>{t.name}</div>
+              <div>{t.date.toDateString()}</div>
+              <div>{t.value}</div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
