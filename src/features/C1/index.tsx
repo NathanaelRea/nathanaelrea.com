@@ -459,7 +459,7 @@ function TimeSeriesChart({ data }: { data: TimeSeriesData[] | undefined }) {
     <div className="relative w-full h-full">
       <svg ref={chartRef} className="w-full h-full" />
       {curData != null && (
-        <div className="absolute top-0 left-0">
+        <div className="absolute top-0 left-0 pointer-events-none">
           <p>{curData.date.toLocaleDateString()}</p>
           <p>{cFmt.format(curData.value)}</p>
         </div>

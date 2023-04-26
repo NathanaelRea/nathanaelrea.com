@@ -4,7 +4,7 @@ import logo from "../../src/home.png";
 export default function Layout() {
   return (
     <>
-      <nav className="bg-zinc-900 w-full fixed">
+      <nav className="bg-zinc-900 w-full fixed z-50">
         <div className="flex justify-around items-center p-4">
           <Link to="/">
             <img src={logo} alt="nr-logo" />
