@@ -119,7 +119,7 @@ export function Body() {
     market.forEach((a) => {
       if (a.date < firstBuyDate) return;
       if (
-        buyIndex < p.buyHistory.length - 1 &&
+        buyIndex < p.buyHistory.length &&
         p.buyHistory[buyIndex].date <= a.date
       ) {
         totalSpent += p.buyHistory[buyIndex].value * a.value;
@@ -511,7 +511,7 @@ function PieChart({ data }: { data: Data[] }) {
     const arc = d3
       .arc<d3.PieArcDatum<Data>>()
       .innerRadius(minRadius)
-      .outerRadius((d) => minRadius + (radiusDelta * (d.index + 1)) / 3);
+      .outerRadius((d) => minRadius + (radiusDelta * (d.index + 1)) / 6);
 
     const color = d3.scaleOrdinal<string, string>(d3.schemeDark2);
     const getHighlightedColor = (d: d3.PieArcDatum<Data>, index: number) => {
@@ -546,7 +546,6 @@ function PieChart({ data }: { data: Data[] }) {
   }, [data, highlighted, dimensions, handleMouseOut, handleMouseOver]);
 
   const curData = highlighted == null ? null : data[highlighted];
-  console.log(highlighted);
 
   return (
     <div className="relative w-full h-full">
