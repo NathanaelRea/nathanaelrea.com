@@ -68,6 +68,10 @@ type AssetHistory = {
   totalValue: number;
 };
 
+type TargetPercent = {
+  [key: string]: number;
+};
+
 type FlatTransactions = { date: Date; value: number; name: string };
 
 function Gain(value: number, cost: number) {
@@ -79,6 +83,11 @@ function Return(value: number, cost: number) {
 
 export function Body() {
   const [portfolio, setPortfolio] = useState(defaultData);
+
+  const targetPercent = portfolio.reduce((acc: TargetPercent, val) => {
+    acc[val.symbol] = val.percentTarget;
+    return acc;
+  }, {});
 
   const marketHistories = useQueries({
     queries: portfolio.map((item) => ({
@@ -182,7 +191,7 @@ export function Body() {
         } as FlatTransactions;
       })
     )
-    .sort((a, b) => a.date.getTime() - b.date.getTime());
+    .sort((a, b) => b.date.getTime() - a.date.getTime());
 
   return (
     <div className="flex justify-center w-full">
@@ -216,7 +225,11 @@ export function Body() {
           </IndicatorSm>
         </div>
         <div className="bg-gray-700 rounded-md p-2 aspect-square self-center">
-          {isLoading ? <Loading /> : <PieChart data={pieChartData} />}
+          {isLoading ? (
+            <Loading />
+          ) : (
+            <PieChart data={pieChartData} targetPercent={targetPercent} />
+          )}
         </div>
         <div className="bg-gray-800 font-bold text-xl p-2 rounded-md col-span-2">
           {isLoading ? <Loading /> : <TimeSeriesChart data={timeSeriesData} />}
@@ -381,6 +394,7 @@ function TimeSeriesChart({ data }: { data: TimeSeriesData[] | undefined }) {
   const chartRef = useRef<SVGSVGElement>(null);
   const [highlighted, setHighlighted] = useState<number | null>(null);
   const { dimensions } = useBoundingRect(chartRef);
+  const margin = 10;
 
   const handleMouseOver = useCallback(
     (event: MouseEvent) => {
@@ -405,12 +419,12 @@ function TimeSeriesChart({ data }: { data: TimeSeriesData[] | undefined }) {
     const xScale = d3
       .scaleTime()
       .domain(d3.extent(data, (d) => d.date) as [Date, Date])
-      .range([0, dimensions.width]);
+      .range([margin, dimensions.width - margin]);
 
     const yScale = d3
       .scaleLinear()
       .domain([0, d3.max(data, (d) => d.value) || 0])
-      .range([dimensions.height, 0]);
+      .range([dimensions.height - margin, margin]);
 
     const line = d3
       .line<TimeSeriesData>()
@@ -474,12 +488,19 @@ function TimeSeriesChart({ data }: { data: TimeSeriesData[] | undefined }) {
 
 type Data = { label: string; value: number };
 
-function PieChart({ data }: { data: Data[] }) {
+function PieChart({
+  data,
+  targetPercent,
+}: {
+  data: Data[];
+  targetPercent: TargetPercent;
+}) {
   const chartRef = useRef<SVGSVGElement>(null);
   const [highlighted, setHighlighted] = useState<number | null>(null);
   const { dimensions } = useBoundingRect(chartRef);
 
   const maxDiameter = Math.min(dimensions.height, dimensions.width);
+  const innerRadius = maxDiameter / 4.5;
   const minRadius = maxDiameter / 4;
   const maxRadius = maxDiameter / 2.25;
   const radiusDelta = maxRadius - minRadius;
@@ -498,6 +519,12 @@ function PieChart({ data }: { data: Data[] }) {
     [setHighlighted]
   );
 
+  function calculateWeight(target: number, actual: number) {
+    if (actual == 0) return 0;
+    const weight = (actual - target) / actual;
+    return (Math.min(Math.max(weight, -1), 1) + 1) / 2;
+  }
+
   useEffect(() => {
     if (chartRef.current == null || data == undefined) return;
 
@@ -510,8 +537,13 @@ function PieChart({ data }: { data: Data[] }) {
 
     const arc = d3
       .arc<d3.PieArcDatum<Data>>()
-      .innerRadius(minRadius)
-      .outerRadius((d) => minRadius + (radiusDelta * (d.index + 1)) / 6);
+      .innerRadius(innerRadius)
+      .outerRadius(
+        (d) =>
+          minRadius +
+          radiusDelta *
+            calculateWeight(targetPercent[d.data.label], d.data.value)
+      );
 
     const color = d3.scaleOrdinal<string, string>(d3.schemeDark2);
     const getHighlightedColor = (d: d3.PieArcDatum<Data>, index: number) => {
@@ -556,7 +588,8 @@ function PieChart({ data }: { data: Data[] }) {
         >
           <div className="text-center">
             <div>{curData.label}</div>
-            <div>{pFmt1.format(curData.value)}</div>
+            <div>A: {pFmt1.format(curData.value)}</div>
+            <div>T: {pFmt1.format(targetPercent[curData.label])}</div>
           </div>
         </div>
       )}

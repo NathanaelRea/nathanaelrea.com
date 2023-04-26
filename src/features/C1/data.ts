@@ -32,9 +32,9 @@ export const defaultData: Purchases[] = [
     name: "bitcoin",
     percentTarget: 0.1,
     buyHistory: [
-      { value: 0.1, date: new Date("2023-01-01") },
-      { value: 0.1, date: new Date("2023-02-01") },
-      { value: 0.1, date: new Date("2023-03-01") },
+      { value: 0.015, date: new Date("2023-01-01") },
+      { value: 0.015, date: new Date("2023-02-01") },
+      { value: 0.015, date: new Date("2023-03-01") },
     ],
   },
   {
@@ -47,19 +47,21 @@ export const defaultData: Purchases[] = [
       { value: 0.5, date: new Date("2023-02-01") },
       { value: 0.5, date: new Date("2023-02-15") },
       { value: 0.5, date: new Date("2023-03-01") },
+      { value: 0.5, date: new Date("2023-03-15") },
+      { value: 0.5, date: new Date("2023-04-01") },
     ],
   },
   {
     symbol: "DOGE",
     name: "dogecoin",
     percentTarget: 0.1,
-    buyHistory: [{ value: 10_000, date: new Date("2023-01-01") }],
+    buyHistory: [{ value: 15_000, date: new Date("2023-01-01") }],
   },
   {
     symbol: "SOL",
     name: "solana",
     percentTarget: 0.1,
-    buyHistory: [{ value: 50, date: new Date("2023-01-01") }],
+    buyHistory: [{ value: 40, date: new Date("2023-01-01") }],
   },
   {
     symbol: "XMR",
@@ -71,6 +73,6 @@ export const defaultData: Purchases[] = [
     symbol: "LINK",
     name: "chainlink",
     percentTarget: 0.1,
-    buyHistory: [{ value: 100, date: new Date("2023-01-01") }],
+    buyHistory: [{ value: 250, date: new Date("2023-01-01") }],
   },
 ];
