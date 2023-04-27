@@ -1,6 +1,6 @@
 import { Purchases } from ".";
 
-export const percentFormat = new Intl.NumberFormat("en-US", {
+export const percentFormat1 = new Intl.NumberFormat("en-US", {
   style: "percent",
   minimumFractionDigits: 1,
   maximumFractionDigits: 1,
@@ -18,11 +18,18 @@ export const percentFormat0 = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 0,
 }).format;
 
-export const currencyFormat = new Intl.NumberFormat("en-US", {
+export const currencyFormat2 = new Intl.NumberFormat("en-US", {
   style: "currency",
   currency: "USD",
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
+}).format;
+
+export const currencyFormat0 = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0,
 }).format;
 
 // TODO from local storage

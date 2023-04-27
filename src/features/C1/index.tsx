@@ -1,4 +1,9 @@
-import { currencyFormat, defaultData, percentFormat } from "./data";
+import {
+  currencyFormat0,
+  currencyFormat2,
+  defaultData,
+  percentFormat1,
+} from "./data";
 import * as d3 from "d3";
 import { motion, AnimatePresence } from "framer-motion";
 import { addDays } from "date-fns";
@@ -62,13 +67,14 @@ type Slice = {
   return: number;
   targetPercent: number;
   actualPercent: number;
+  nextBuy: number;
 };
 
 type TargetPercent = {
   [key: string]: number;
 };
 
-type FlatTransactions = { date: Date; value: number; name: string };
+type FlatTransactions = { date: Date; value: number; symbol: string };
 
 function Gain(value: number, cost: number) {
   return value - cost;
@@ -145,16 +151,37 @@ export default function C1() {
   const sumTotalValue = assets.reduce((acc, val) => acc + val.totalValue, 0);
   const sumTotalCost = assets.reduce((acc, val) => acc + val.totalSpent, 0);
 
-  const slices: Slice[] = assets.map((a) => {
-    return {
-      symbol: a.symbol,
-      totalValue: a.totalValue,
-      gain: Gain(a.totalValue, a.totalSpent),
-      return: Return(a.totalValue, a.totalSpent),
-      targetPercent: a.percentTarget,
-      actualPercent: a.totalValue / sumTotalValue,
-    };
-  });
+  const [nextAlloc, setNextAlloc] = useState(250);
+
+  const handleUpdateNextAlloc = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setNextAlloc(parseInt(e.target.value));
+  const sumAllocation = assets.reduce(
+    (acc, val) =>
+      acc +
+      Math.max(
+        0,
+        (sumTotalValue + nextAlloc) * val.percentTarget - val.totalValue
+      ),
+    0
+  );
+
+  const slices: Slice[] = assets
+    .map((a) => {
+      const allocation = Math.max(
+        0,
+        (sumTotalValue + nextAlloc) * a.percentTarget - a.totalValue
+      );
+      return {
+        symbol: a.symbol,
+        totalValue: a.totalValue,
+        gain: Gain(a.totalValue, a.totalSpent),
+        return: Return(a.totalValue, a.totalSpent),
+        targetPercent: a.percentTarget,
+        actualPercent: a.totalValue / sumTotalValue,
+        nextBuy: (nextAlloc * allocation) / sumAllocation,
+      };
+    })
+    .sort((a, b) => b.totalValue - a.totalValue);
 
   function calculateTimeSeriesData(assetHistory: Asset[]) {
     const ans = [] as TimeSeriesData[];
@@ -178,7 +205,7 @@ export default function C1() {
         return {
           date: t.date,
           value: t.value,
-          name: p.name,
+          symbol: p.symbol,
         } as FlatTransactions;
       })
     )
@@ -223,8 +250,10 @@ export default function C1() {
         </div>
         <div className="col-span-2 sm:col-span-3">
           <h3 className="font-bold text-xl ">Slices</h3>
-          <input className="rounded-sm" placeholder="250" />
-          <SliceTableHeader />
+          <SliceTableHeader
+            nextAlloc={nextAlloc}
+            handleUpdate={handleUpdateNextAlloc}
+          />
           {isLoading ? (
             <Loading />
           ) : (
@@ -238,10 +267,10 @@ export default function C1() {
           <TransactionTableHeader />
           {flatTransactions.map((t) => (
             <div
-              key={`${t.name}-${t.date}-${t.value}`}
+              key={`${t.symbol}-${t.date}-${t.value}`}
               className="grid grid-cols-3 bg-cyan-950 text-cyan-100 justify-items-center p-1 items-center"
             >
-              <div>{t.name}</div>
+              <div>{t.symbol}</div>
               <div>{t.date.toDateString()}</div>
               <div>{t.value}</div>
             </div>
@@ -262,20 +291,34 @@ function TransactionTableHeader() {
   );
 }
 
-function SliceTableHeader() {
+function SliceTableHeader({
+  nextAlloc,
+  handleUpdate,
+}: {
+  nextAlloc: number;
+  handleUpdate: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}) {
   return (
     <div className="grid grid-cols-5 bg-cyan-900 p-2 text-cyan-300 rounded-t-md items-center justify-items-center">
       <div>Name</div>
       <div>Value</div>
-      <div>
+      <div className="flex flex-col items-center">
         <div>Gain</div>
         <div>Return</div>
       </div>
-      <div>
+      <div className="flex flex-col items-center">
         <div>Actual</div>
         <div>Target</div>
       </div>
-      <div>Next Buy</div>
+      <div className="flex flex-col items-center">
+        <div>Next Buy</div>
+        <input
+          className="text-center bg-inherit outline-none"
+          value={nextAlloc}
+          placeholder="250"
+          onChange={handleUpdate}
+        />
+      </div>
     </div>
   );
 }
@@ -293,27 +336,27 @@ function SliceTableRow({ slice }: { slice: Slice }) {
         <ColorPercent value={slice.actualPercent} />
         <ColorPercent value={slice.targetPercent} />
       </div>
-      <div>...</div>
+      {slice.nextBuy == 0 ? <div>-</div> : <Money value={slice.nextBuy} />}
     </div>
   );
 }
 
 function Money({ value }: { value: number }) {
-  return <div className="text-white">{currencyFormat(value)}</div>;
+  return <div className="text-white">{currencyFormat0(value)}</div>;
 }
 function ColorMoney({ value }: { value: number }) {
   if (value > 0)
-    return <div className="text-green-500">{currencyFormat(value)}</div>;
+    return <div className="text-green-500">{currencyFormat0(value)}</div>;
   else if (value < 0)
-    return <div className="text-red-500">{currencyFormat(value)}</div>;
-  else return <div className="text-white">{currencyFormat(value)}</div>;
+    return <div className="text-red-500">{currencyFormat0(value)}</div>;
+  else return <div className="text-white">{currencyFormat0(value)}</div>;
 }
 function ColorPercent({ value }: { value: number }) {
   if (value > 0)
-    return <div className="text-green-500">{percentFormat(value)}</div>;
+    return <div className="text-green-500">{percentFormat1(value)}</div>;
   else if (value < 0)
-    return <div className="text-red-500">{percentFormat(value)}</div>;
-  else return <div className="text-white">{percentFormat(value)}</div>;
+    return <div className="text-red-500">{percentFormat1(value)}</div>;
+  else return <div className="text-white">{percentFormat1(value)}</div>;
 }
 
 function IndicatorLg({
@@ -528,7 +571,7 @@ function TimeSeriesChart({ data }: { data: TimeSeriesData[] | undefined }) {
               transition={{ ease: "easeOut" }}
             >
               <p>{curData.date.toLocaleDateString()}</p>
-              <p>{currencyFormat(curData.value)}</p>
+              <p>{currencyFormat2(curData.value)}</p>
             </motion.div>
           </>
         )}
@@ -649,10 +692,10 @@ function PieChart({ slices }: { slices: Slice[] }) {
         >
           <div className="text-center">
             <div>{curData.label}</div>
-            <div>{percentFormat(curData.value)}</div>
+            <div>{percentFormat1(curData.value)}</div>
             <div className="flex items-center">
               <ArrowsPointingInIcon className="h-3" />
-              <div>{percentFormat(targetPercent[curData.label])}</div>
+              <div>{percentFormat1(targetPercent[curData.label])}</div>
             </div>
           </div>
         </div>
