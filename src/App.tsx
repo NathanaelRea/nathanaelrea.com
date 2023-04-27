@@ -24,7 +24,7 @@ export default function App() {
               <Route path="/slay" element={<Slay />} />
             </Route>
           </Routes>
-          <ReactQueryDevtools initialIsOpen />
+          <ReactQueryDevtools />
         </QueryClientProvider>
       </Suspense>
     </BrowserRouter>

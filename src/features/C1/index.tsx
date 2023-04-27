@@ -480,18 +480,20 @@ function TimeSeriesChart({ data }: { data: TimeSeriesData[] | undefined }) {
             <motion.div
               className={`absolute bg-white pointer-events-none h-full top-0`}
               style={{ width: rectWidth }}
-              initial={{ opacity: 0, left: 0 }}
+              initial={{ opacity: 0 }}
               animate={{
                 opacity: 0.25,
-                left: mousePosition[0] - rectWidth / 2,
-                transition: { duration: 0 },
+                left: xScaleasdfasdf
+                  ? xScaleasdfasdf(curData.date) - rectWidth / 2
+                  : 0,
               }}
               exit={{
                 opacity: 0,
-                left: dimensions.width - rectWidth / 2,
-                transition: { duration: 0.25, ease: "easeIn" },
+                transition: { ease: "easeOut" },
               }}
-              transition={{ duration: 0.1 }}
+              transition={{
+                duration: 0,
+              }}
             />
             <motion.div
               className={`absolute bg-white pointer-events-none rounded-full z-10`}
@@ -505,11 +507,11 @@ function TimeSeriesChart({ data }: { data: TimeSeriesData[] | undefined }) {
                 top: yScaleasdfasdf
                   ? yScaleasdfasdf(curData.value) - circleDiameter / 2
                   : 0,
-                transition: { duration: 0 },
               }}
               exit={{
                 opacity: 0,
               }}
+              transition={{ duration: 0 }}
             />
             <motion.div
               className="absolute top-0 left-0 pointer-events-none"
