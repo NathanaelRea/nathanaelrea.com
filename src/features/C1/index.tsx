@@ -18,6 +18,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { ArrowsPointingInIcon } from "@heroicons/react/24/solid";
 
 type LocalStorage = {
   crypto: Purchases;
@@ -662,8 +663,11 @@ function PieChart({ slices }: { slices: Slice[] }) {
         >
           <div className="text-center">
             <div>{curData.label}</div>
-            <div>A: {percentFormat(curData.value)}</div>
-            <div>T: {percentFormat(targetPercent[curData.label])}</div>
+            <div>{percentFormat(curData.value)}</div>
+            <div className="flex items-center">
+              <ArrowsPointingInIcon className="h-3" />
+              <div>{percentFormat(targetPercent[curData.label])}</div>
+            </div>
           </div>
         </div>
       )}
