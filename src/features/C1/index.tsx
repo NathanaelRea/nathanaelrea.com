@@ -2,13 +2,8 @@ import { currencyFormat, defaultData, percentFormat } from "./data";
 import * as d3 from "d3";
 import { motion, AnimatePresence } from "framer-motion";
 import { addDays } from "date-fns";
-import {
-  QueryClient,
-  QueryClientProvider,
-  useQueries,
-} from "@tanstack/react-query";
+import { useQueries } from "@tanstack/react-query";
 import axios from "axios";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import {
   ReactNode,
   RefObject,
@@ -43,17 +38,6 @@ type TimeSeriesData = {
   date: Date;
   value: number;
 };
-
-const queryClient = new QueryClient();
-
-export default function C1() {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <Body />
-      <ReactQueryDevtools initialIsOpen />
-    </QueryClientProvider>
-  );
-}
 
 const getMarketHistory = async (name: string) => {
   const res = await axios.get(
@@ -93,7 +77,7 @@ function Return(value: number, cost: number) {
   return (value - cost) / cost;
 }
 
-export function Body() {
+export default function C1() {
   const [portfolio, setPortfolio] = useState(defaultData);
 
   const marketHistories = useQueries({
