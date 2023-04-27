@@ -1,4 +1,4 @@
-import { cFmt, defaultData, pFmt1 } from "./data";
+import { currencyFormat, defaultData, percentFormat } from "./data";
 import * as d3 from "d3";
 import { motion, AnimatePresence } from "framer-motion";
 import { addDays } from "date-fns";
@@ -314,21 +314,21 @@ function SliceTableRow({ slice }: { slice: Slice }) {
 }
 
 function Money({ value }: { value: number }) {
-  return <div className="text-white">{cFmt.format(value)}</div>;
+  return <div className="text-white">{currencyFormat(value)}</div>;
 }
 function ColorMoney({ value }: { value: number }) {
   if (value > 0)
-    return <div className="text-green-500">{cFmt.format(value)}</div>;
+    return <div className="text-green-500">{currencyFormat(value)}</div>;
   else if (value < 0)
-    return <div className="text-red-500">{cFmt.format(value)}</div>;
-  else return <div className="text-white">{cFmt.format(value)}</div>;
+    return <div className="text-red-500">{currencyFormat(value)}</div>;
+  else return <div className="text-white">{currencyFormat(value)}</div>;
 }
 function ColorPercent({ value }: { value: number }) {
   if (value > 0)
-    return <div className="text-green-500">{pFmt1.format(value)}</div>;
+    return <div className="text-green-500">{percentFormat(value)}</div>;
   else if (value < 0)
-    return <div className="text-red-500">{pFmt1.format(value)}</div>;
-  else return <div className="text-white">{pFmt1.format(value)}</div>;
+    return <div className="text-red-500">{percentFormat(value)}</div>;
+  else return <div className="text-white">{percentFormat(value)}</div>;
 }
 
 function IndicatorLg({
@@ -541,7 +541,7 @@ function TimeSeriesChart({ data }: { data: TimeSeriesData[] | undefined }) {
               transition={{ ease: "easeOut" }}
             >
               <p>{curData.date.toLocaleDateString()}</p>
-              <p>{cFmt.format(curData.value)}</p>
+              <p>{currencyFormat(curData.value)}</p>
             </motion.div>
           </>
         )}
@@ -662,8 +662,8 @@ function PieChart({ slices }: { slices: Slice[] }) {
         >
           <div className="text-center">
             <div>{curData.label}</div>
-            <div>A: {pFmt1.format(curData.value)}</div>
-            <div>T: {pFmt1.format(targetPercent[curData.label])}</div>
+            <div>A: {percentFormat(curData.value)}</div>
+            <div>T: {percentFormat(targetPercent[curData.label])}</div>
           </div>
         </div>
       )}
