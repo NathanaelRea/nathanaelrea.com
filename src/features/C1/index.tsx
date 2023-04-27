@@ -1,6 +1,6 @@
 import { cFmt, defaultData, pFmt1 } from "./data";
 import * as d3 from "d3";
-// import { motion, useScroll } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { addDays } from "date-fns";
 import {
   QueryClient,
@@ -14,6 +14,7 @@ import {
   RefObject,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -397,30 +398,15 @@ function TimeSeriesChart({ data }: { data: TimeSeriesData[] | undefined }) {
   const { dimensions } = useBoundingRect(chartRef);
   const margin = 10;
 
-  const handleMouseOver = useCallback(
-    (event: MouseEvent) => {
-      const target = event.target as SVGRectElement;
-      const dIndex = target.getAttribute("data-index");
-      const index = dIndex == null ? null : parseInt(dIndex);
-      setHighlighted(index);
-    },
-    [setHighlighted]
-  );
-
-  const handleMouseOut = useCallback(() => {
-    setHighlighted(null);
-  }, [setHighlighted]);
-
   useEffect(() => {
     if (chartRef.current == null || data == undefined) return;
-    const rectWidth = dimensions.width / data.length;
 
     const chart = d3.select(chartRef.current);
 
     const xScale = d3
       .scaleTime()
       .domain(d3.extent(data, (d) => d.date) as [Date, Date])
-      .range([margin, dimensions.width - margin]);
+      .range([0, dimensions.width]);
 
     const yScale = d3
       .scaleLinear()
@@ -440,49 +426,131 @@ function TimeSeriesChart({ data }: { data: TimeSeriesData[] | undefined }) {
       .attr("stroke-width", 2)
       .attr("d", line);
 
-    chart
-      .selectAll("circle")
-      .data(data)
-      .enter()
-      .append("circle")
-      .attr("r", 5)
-      .attr("cx", (d) => xScale(d.date))
-      .attr("cy", (d) => yScale(d.value))
-      .attr("fill", "white")
-      .attr("opacity", (_, i) => (i === highlighted ? 1 : 0));
-
-    chart
-      .selectAll("rect")
-      .data(data)
-      .enter()
-      .append("rect")
-      .attr("width", 2 * rectWidth)
-      .attr("height", dimensions.height)
-      .attr("x", (d) => xScale(d.date) - rectWidth)
-      .attr("y", 0)
-      .style("fill", "white")
-      .attr("fill-opacity", (_, i) => (i === highlighted ? 0.25 : 0))
-      .on("mouseenter", handleMouseOver)
-      .on("mouseleave", handleMouseOut)
-      .attr("data-index", (_, i) => i);
-
     return () => {
       chart.selectAll("*").remove();
     };
-  }, [data, highlighted, setHighlighted, dimensions]);
+  }, [data, dimensions]);
+
+  const [mousePosition, setMousePosition] = useState<[number, number] | null>([
+    0, 0,
+  ]);
+
+  // TODO fix
+  const xScaleasdfasdf = useMemo(
+    () =>
+      data == null
+        ? null
+        : d3
+            .scaleTime()
+            .domain(d3.extent(data, (d) => d.date) as [Date, Date])
+            .range([0, dimensions.width]),
+    [data, dimensions]
+  );
+  const yScaleasdfasdf = useMemo(
+    () =>
+      data == null
+        ? null
+        : d3
+            .scaleLinear()
+            .domain([0, d3.max(data, (d) => d.value) || 0])
+            .range([dimensions.height - margin, margin]),
+    [data, dimensions]
+  );
+
+  const handleMouseMove = useCallback(
+    (event: React.MouseEvent) => {
+      if (data == null || xScaleasdfasdf == null) {
+        setHighlighted(null);
+        setMousePosition(null);
+        return;
+      }
+
+      const bisect = d3.bisector((d: TimeSeriesData) => d.date).left;
+      const { offsetX: mouseX, offsetY: mouseY } = event.nativeEvent;
+      const xValue = xScaleasdfasdf.invert(mouseX);
+      const index = bisect(data, xValue, 0);
+
+      setHighlighted(index);
+      setMousePosition([mouseX, mouseY]);
+    },
+    [setHighlighted, data, dimensions, setMousePosition]
+  );
+
+  const handleMouseLeave = () => {
+    setHighlighted(null);
+    setMousePosition(null);
+  };
+  const circleDiameter = 10;
+  const rectWidth = 24;
 
   const curData =
     data == null || highlighted == null ? null : data[highlighted];
 
   return (
-    <div className="relative w-full h-full">
+    <div className="relative w-full h-full overflow-hidden">
       <svg ref={chartRef} className="w-full h-full" />
-      {curData != null && (
-        <div className="absolute top-0 left-0 pointer-events-none">
-          <p>{curData.date.toLocaleDateString()}</p>
-          <p>{cFmt.format(curData.value)}</p>
-        </div>
-      )}
+      <AnimatePresence>
+        {data != null && mousePosition != null && curData != null && (
+          <>
+            <motion.div
+              className={`absolute bg-white pointer-events-none h-full top-0`}
+              style={{ width: rectWidth }}
+              initial={{ opacity: 0, left: 0 }}
+              animate={{
+                opacity: 0.25,
+                left: mousePosition[0] - rectWidth / 2,
+                transition: { duration: 0 },
+              }}
+              exit={{
+                opacity: 0,
+                left: dimensions.width - rectWidth / 2,
+                transition: { duration: 0.25, ease: "easeIn" },
+              }}
+              transition={{ duration: 0.1 }}
+            />
+            <motion.div
+              className={`absolute bg-white pointer-events-none rounded-full z-10`}
+              style={{ width: circleDiameter, height: circleDiameter }}
+              initial={{ opacity: 0 }}
+              animate={{
+                opacity: 1,
+                left: xScaleasdfasdf
+                  ? xScaleasdfasdf(curData.date) - circleDiameter / 2
+                  : 0,
+                top: yScaleasdfasdf
+                  ? yScaleasdfasdf(curData.value) - circleDiameter / 2
+                  : 0,
+                transition: { duration: 0 },
+              }}
+              exit={{
+                opacity: 0,
+              }}
+            />
+            <motion.div
+              className="absolute top-0 left-0 pointer-events-none"
+              initial={{ opacity: 0, y: "-100%" }}
+              animate={{
+                opacity: 1,
+                y: 0,
+              }}
+              exit={{
+                opacity: 0,
+                y: "-100%",
+                transition: { ease: "easeIn" },
+              }}
+              transition={{ ease: "easeOut" }}
+            >
+              <p>{curData.date.toLocaleDateString()}</p>
+              <p>{cFmt.format(curData.value)}</p>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+      <div
+        className="absolute top-0 left-0 w-full h-full"
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+      />
     </div>
   );
 }
