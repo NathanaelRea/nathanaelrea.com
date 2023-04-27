@@ -154,7 +154,9 @@ export default function C1() {
   const [nextAlloc, setNextAlloc] = useState(250);
 
   const handleUpdateNextAlloc = (e: React.ChangeEvent<HTMLInputElement>) =>
-    setNextAlloc(parseInt(e.target.value));
+    setNextAlloc(
+      isNaN(parseInt(e.target.value)) ? 0 : parseInt(e.target.value)
+    );
   const sumAllocation = assets.reduce(
     (acc, val) =>
       acc +
