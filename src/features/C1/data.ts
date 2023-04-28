@@ -1,37 +1,5 @@
 import { Purchases } from ".";
 
-export const percentFormat1 = new Intl.NumberFormat("en-US", {
-  style: "percent",
-  minimumFractionDigits: 1,
-  maximumFractionDigits: 1,
-}).format;
-
-export const percentFormat2 = new Intl.NumberFormat("en-US", {
-  style: "percent",
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-}).format;
-
-export const percentFormat0 = new Intl.NumberFormat("en-US", {
-  style: "percent",
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 0,
-}).format;
-
-export const currencyFormat2 = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-}).format;
-
-export const currencyFormat0 = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 0,
-}).format;
-
 // TODO from local storage
 export const defaultData: Purchases[] = [
   {
