@@ -10,7 +10,7 @@ import {
 } from "react";
 import { currencyFormat2, percentFormat1 } from "./money";
 import { ArrowsPointingInIcon } from "@heroicons/react/24/solid";
-import { Slice, TimeSeriesData } from ".";
+import { Slice, CoinbaseTransaction } from ".";
 
 type Data = { label: string; value: number };
 
@@ -21,7 +21,7 @@ type TargetPercent = {
 export function TimeSeriesChart({
   data,
 }: {
-  data: TimeSeriesData[] | undefined;
+  data: CoinbaseTransaction[] | undefined;
 }) {
   const chartRef = useRef<SVGSVGElement>(null);
   const [highlighted, setHighlighted] = useState<number | null>(null);
@@ -35,7 +35,7 @@ export function TimeSeriesChart({
 
     const xScale = d3
       .scaleTime()
-      .domain(d3.extent(data, (d) => d.date) as [Date, Date])
+      .domain(d3.extent(data, (d) => d.timestamp) as [Date, Date])
       .range([0, dimensions.width]);
 
     const yScale = d3
@@ -44,8 +44,8 @@ export function TimeSeriesChart({
       .range([dimensions.height - margin, margin]);
 
     const line = d3
-      .line<TimeSeriesData>()
-      .x((d) => xScale(d.date))
+      .line<CoinbaseTransaction>()
+      .x((d) => xScale(d.timestamp))
       .y((d) => yScale(d.value));
 
     chart
@@ -72,7 +72,7 @@ export function TimeSeriesChart({
         ? null
         : d3
             .scaleTime()
-            .domain(d3.extent(data, (d) => d.date) as [Date, Date])
+            .domain(d3.extent(data, (d) => d.timestamp) as [Date, Date])
             .range([0, dimensions.width]),
     [data, dimensions]
   );
@@ -95,7 +95,7 @@ export function TimeSeriesChart({
         return;
       }
 
-      const bisect = d3.bisector((d: TimeSeriesData) => d.date).left;
+      const bisect = d3.bisector((d: CoinbaseTransaction) => d.timestamp).left;
       const { offsetX: mouseX, offsetY: mouseY } = event.nativeEvent;
       const xValue = xScaleasdfasdf.invert(mouseX);
       const index = bisect(data, xValue, 0);
@@ -129,7 +129,7 @@ export function TimeSeriesChart({
               animate={{
                 opacity: 0.25,
                 left: xScaleasdfasdf
-                  ? xScaleasdfasdf(curData.date) - rectWidth / 2
+                  ? xScaleasdfasdf(curData.timestamp) - rectWidth / 2
                   : 0,
               }}
               exit={{
@@ -147,7 +147,7 @@ export function TimeSeriesChart({
               animate={{
                 opacity: 1,
                 left: xScaleasdfasdf
-                  ? xScaleasdfasdf(curData.date) - circleDiameter / 2
+                  ? xScaleasdfasdf(curData.timestamp) - circleDiameter / 2
                   : 0,
                 top: yScaleasdfasdf
                   ? yScaleasdfasdf(curData.value) - circleDiameter / 2
@@ -172,7 +172,7 @@ export function TimeSeriesChart({
               }}
               transition={{ ease: "easeOut" }}
             >
-              <p>{curData.date.toLocaleDateString()}</p>
+              <p>{curData.timestamp.toLocaleDateString()}</p>
               <p>{currencyFormat2(curData.value)}</p>
             </motion.div>
           </>
@@ -253,7 +253,7 @@ export function PieChart({ slices }: { slices: Slice[] }) {
     const getHighlightedColor = (d: d3.PieArcDatum<Data>, index: number) => {
       const hslColor = d3.hsl(color(d.data.label));
       return highlighted === index
-        ? hslColor.brighter(0.25).toString()
+        ? hslColor.brighter(0.5).toString()
         : hslColor.toString();
     };
 

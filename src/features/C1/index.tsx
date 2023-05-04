@@ -1,33 +1,44 @@
-import { defaultData } from "./data";
 import { addDays } from "date-fns";
-import { useQueries } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import { useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Indicator } from "./indicator";
 import { SliceTable, TransactionTable } from "./tables";
 import { Money, ColorMoney, ColorPercent } from "./money";
 import { PieChart, TimeSeriesChart } from "./charts";
 import LoadingDots from "../../components/LoadingDots";
+import { useTransactions } from "./useTransactions";
 
 export function Gain(value: number, cost: number) {
   return value - cost;
 }
 
 export function Return(value: number, cost: number) {
-  return (value - cost) / cost;
+  return cost == 0 ? 0 : (value - cost) / cost;
 }
 
 type LocalStorage = {
-  crypto: Purchases;
+  crypto: PortfolioItem;
   nextTradeValue: number;
   portfolioName: string;
 };
 
-export type Purchases = {
+export type TimeSeriesData = {
+  date: Date;
+  value: number;
+};
+
+export type PortfolioItem = {
   symbol: string;
   name: string;
-  buyHistory: TimeSeriesData[];
+  coinbaseTransactions: CoinbaseTransaction[];
   percentTarget: number;
+  staking?: number;
+};
+
+export type CoinbaseTransaction = {
+  timestamp: Date;
+  value: number;
 };
 
 type MarketChartResponse = {
@@ -36,10 +47,11 @@ type MarketChartResponse = {
   total_volumes: [number, number][];
 };
 
-export type TimeSeriesData = {
-  date: Date;
-  value: number;
-};
+type CoinListReponse = {
+  id: string;
+  symbol: string;
+  name: string;
+}[];
 
 const getMarketHistory = async (name: string) => {
   const res = await axios.get(
@@ -48,10 +60,15 @@ const getMarketHistory = async (name: string) => {
   return res.data as MarketChartResponse;
 };
 
+const getCoinList = async () => {
+  const res = await axios.get("https://api.coingecko.com/api/v3/coins/list");
+  return res.data as CoinListReponse;
+};
+
 export type Asset = {
   symbol: string;
   name: string;
-  history: TimeSeriesData[];
+  history: CoinbaseTransaction[];
   totalSpent: number;
   totalValue: number;
   percentTarget: number;
@@ -70,7 +87,76 @@ export type Slice = {
 export type Transaction = { date: Date; value: number; symbol: string };
 
 export default function C1() {
-  const [portfolio, setPortfolio] = useState(defaultData);
+  const [nextAlloc, setNextAlloc] = useState(250);
+  const { transactions, handleImport } = useTransactions();
+
+  const coinList = useQuery({
+    staleTime: Infinity,
+    queryKey: ["coinList"],
+    queryFn: () => getCoinList(),
+  });
+  const coinNameLookup: Map<string, string> = useMemo(() => {
+    // This is so dumb. I need Map<string, string[]> and prompt user for correct id
+    if (coinList.data == undefined) return new Map();
+    // reverse because usually better coins are on top?
+    const asdf = coinList.data.reduce((acc, val) => {
+      // This is so dumb. Why does coingeko allow coins with the same symbol?
+      if (
+        !(
+          val.id.endsWith("wormhole") ||
+          val.id.startsWith("binance-peg") ||
+          val.id.startsWith("wrapped")
+        )
+      )
+        acc.set(val.symbol, val.id);
+      return acc;
+    }, new Map());
+    // Hacks for now - of the incorrect I've seen
+    asdf.set("snx", "havven");
+    asdf.set("poly", "polymath");
+    return asdf;
+  }, [coinList]);
+
+  const portfolio = useMemo(() => {
+    if (!transactions) return [];
+
+    const unique = transactions.reduce((acc, val) => {
+      if (coinNameLookup.get(val.asset.toLowerCase())) acc.add(val.asset);
+      return acc;
+    }, new Set<string>());
+    const percentTarget = unique.size == 0 ? 1 : 1 / unique.size;
+    const items = new Map<string, PortfolioItem>();
+    transactions.forEach((t) => {
+      const p = items.get(t.asset);
+      if (p) {
+        p.coinbaseTransactions.push({
+          timestamp: t.timeStamp,
+          value: t.quantity,
+        });
+      } else {
+        const name = coinNameLookup.get(t.asset.toLowerCase());
+        if (name) {
+          items.set(t.asset, {
+            symbol: t.asset,
+            name,
+            coinbaseTransactions: [
+              {
+                timestamp: t.timeStamp,
+                value: t.quantity,
+              },
+            ],
+            percentTarget,
+          });
+        }
+      }
+    });
+    return Array.from(items.values());
+  }, [transactions, coinNameLookup]);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const handleUploadButtonClick = () => {
+    fileInputRef.current?.click();
+  };
 
   const marketHistories = useQueries({
     queries: portfolio.map((item) => ({
@@ -80,21 +166,22 @@ export default function C1() {
     })),
   });
   const isLoading = marketHistories.some((r) => r.isLoading);
-  const timeSeriesMap = marketHistories.reduce(
-    (acc: { [key: string]: TimeSeriesData[] }, val, idx) => {
-      const k = portfolio[idx].name;
-      const newData = val.data?.prices.map((r) => {
-        return { date: new Date(r[0]), value: r[1] };
-      });
-      if (k == null || newData == null) return acc;
-      acc[k] = newData;
-      return acc;
-    },
-    {}
-  );
+  const timeSeriesMap = marketHistories.reduce((acc, val, idx) => {
+    const k = portfolio[idx].name;
+    const newData = val.data?.prices.map((r) => {
+      return {
+        timestamp: new Date(r[0]),
+        value: r[1],
+      } as CoinbaseTransaction;
+    });
+    if (k == null || newData == null) return acc;
+    acc.set(k, newData);
+    return acc;
+  }, new Map<string, CoinbaseTransaction[]>());
 
   const assets: Asset[] = portfolio.map((p) => {
-    if (!Object.hasOwn(timeSeriesMap, p.name))
+    const market = timeSeriesMap.get(p.name);
+    if (!market)
       return {
         symbol: p.symbol,
         name: p.name,
@@ -103,32 +190,33 @@ export default function C1() {
         totalSpent: 0,
         percentTarget: p.percentTarget,
       } as Asset;
-    const market = timeSeriesMap[p.name];
-    const history = [] as TimeSeriesData[];
+    const history = [] as CoinbaseTransaction[];
     let totalSpent = 0;
     let buyIndex = 0;
     let cummulativeAmmount = 0;
-    const firstBuyDate = p.buyHistory[0].date;
+    const firstBuyDate = p.coinbaseTransactions[0].timestamp;
     market.forEach((a) => {
-      if (a.date < firstBuyDate) return;
+      if (a.timestamp < firstBuyDate) return;
       if (
-        buyIndex < p.buyHistory.length &&
-        p.buyHistory[buyIndex].date <= a.date
+        buyIndex < p.coinbaseTransactions.length &&
+        p.coinbaseTransactions[buyIndex].timestamp <= a.timestamp
       ) {
-        totalSpent += p.buyHistory[buyIndex].value * a.value;
-        cummulativeAmmount += p.buyHistory[buyIndex].value;
+        totalSpent += p.coinbaseTransactions[buyIndex].value * a.value;
+        cummulativeAmmount += p.coinbaseTransactions[buyIndex].value;
         buyIndex += 1;
       }
       history.push({
-        date: a.date,
+        timestamp: a.timestamp,
         value: cummulativeAmmount * a.value,
       });
     });
+    const totalValue =
+      history.length == 0 ? 0 : history[history.length - 1].value;
     return {
       symbol: p.symbol,
       name: p.name,
       history,
-      totalValue: history[history.length - 1].value,
+      totalValue,
       totalSpent,
       percentTarget: p.percentTarget,
     } as Asset;
@@ -136,8 +224,6 @@ export default function C1() {
 
   const sumTotalValue = assets.reduce((acc, val) => acc + val.totalValue, 0);
   const sumTotalCost = assets.reduce((acc, val) => acc + val.totalSpent, 0);
-
-  const [nextAlloc, setNextAlloc] = useState(250);
 
   const handleUpdateNextAlloc = (e: React.ChangeEvent<HTMLInputElement>) =>
     setNextAlloc(
@@ -172,26 +258,31 @@ export default function C1() {
     .sort((a, b) => b.totalValue - a.totalValue);
 
   function calculateTimeSeriesData(assetHistory: Asset[]) {
-    const ans = [] as TimeSeriesData[];
+    const ans = [] as CoinbaseTransaction[];
     for (const a of assetHistory) {
       for (let i = a.history.length - 1; i >= 0; i--) {
         const idx = a.history.length - i - 1;
-        if (idx >= ans.length) ans.push({ date: a.history[i].date, value: 0 });
+        if (idx >= ans.length)
+          ans.push({ timestamp: a.history[i].timestamp, value: 0 });
         ans[idx].value += a.history[i].value;
       }
     }
     if (ans.length > 0)
-      ans.push({ date: addDays(ans[ans.length - 1].date, -1), value: 0 });
+      ans.push({
+        timestamp: addDays(ans[ans.length - 1].timestamp, -1),
+        value: 0,
+      });
     ans.reverse();
     return ans;
   }
   const timeSeriesData = calculateTimeSeriesData(assets);
 
+  // TODO just use data from useTransactions?
   const flatTransactions = Object.values(portfolio)
     .flatMap((p) =>
-      p.buyHistory.map((t) => {
+      p.coinbaseTransactions.map((t) => {
         return {
-          date: t.date,
+          date: t.timestamp,
           value: t.value,
           symbol: p.symbol,
         } as Transaction;
@@ -205,7 +296,17 @@ export default function C1() {
         <div className="col-span-2 sm:col-span-3">
           <div className="flex gap-2">
             <h1 className="font-bold text-2xl">Portfolio</h1>
-            <button className="bg-cyan-800 px-2 py-1 rounded-md hover:bg-cyan-700">
+
+            <input
+              type="file"
+              onChange={handleImport}
+              ref={fileInputRef}
+              hidden
+            />
+            <button
+              className="bg-cyan-800 px-2 py-1 rounded-md hover:bg-cyan-700"
+              onClick={handleUploadButtonClick}
+            >
               Import
             </button>
           </div>

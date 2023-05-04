@@ -11,7 +11,7 @@ export function SliceTable({
   slices: Slice[];
 }) {
   return (
-    <div className="rounded-lg overflow-clip">
+    <div className="rounded-md overflow-clip">
       <div className="grid grid-cols-5 bg-cyan-900 p-2 text-cyan-300 items-center justify-items-center">
         <div>Name</div>
         <div>Value</div>
@@ -57,7 +57,7 @@ export function SliceTable({
 
 export function TransactionTable({ values }: { values: Transaction[] }) {
   return (
-    <div className="rounded-lg overflow-clip">
+    <div className="rounded-md overflow-clip">
       <div className="grid grid-cols-3 bg-cyan-900 p-2 text-cyan-300 rounded-t-md items-center justify-items-center">
         <div>Name</div>
         <div>Date</div>
