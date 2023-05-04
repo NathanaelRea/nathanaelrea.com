@@ -66,10 +66,11 @@ function typeTransform(
 const TRANSACTIONS = "transactions";
 
 export function useTransactions() {
-  const j = JSON.parse(localStorage.getItem(TRANSACTIONS) ?? "[]");
-  const p = z.array(storageTransaction).safeParse(j);
+  const p = z
+    .array(storageTransaction)
+    .safeParse(JSON.parse(localStorage.getItem(TRANSACTIONS) ?? "[]"));
   const [transactions, setTransactions] = useState<StorageTransaction[]>(
-    p.success ? p.data : defaultData
+    p.success && p.data.length > 0 ? p.data : defaultData
   );
 
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
