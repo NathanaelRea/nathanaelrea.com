@@ -292,10 +292,10 @@ export default function C1() {
 
   return (
     <div className="flex justify-center w-full">
-      <div className="gap-6 m-4 sm:p-8 grid grid-cols-2 sm:grid-cols-3 flex-grow max-w-screen-xl">
-        <div className="col-span-2 sm:col-span-3">
+      <div className="sm:p-8 sm:grid-cols-3 grid flex-grow max-w-screen-xl grid-cols-2 gap-6 m-4">
+        <div className="sm:col-span-3 col-span-2">
           <div className="flex gap-2">
-            <h1 className="font-bold text-2xl">Portfolio</h1>
+            <h1 className="text-2xl font-bold">Portfolio</h1>
 
             <input
               type="file"
@@ -304,14 +304,14 @@ export default function C1() {
               hidden
             />
             <button
-              className="bg-cyan-800 px-2 py-1 rounded-md hover:bg-cyan-700"
+              className="bg-cyan-800 hover:bg-cyan-700 px-2 py-1 rounded-md"
               onClick={handleUploadButtonClick}
             >
               Import
             </button>
           </div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 sm:col-span-3">
+        <div className="sm:grid-cols-3 sm:col-span-3 grid grid-cols-1">
           <Indicator
             name="Current Value"
             size="large"
@@ -343,18 +343,18 @@ export default function C1() {
             value={<ColorMoney value={0} />}
           />
         </div>
-        <div className="bg-gray-700 rounded-md p-2 aspect-square self-center">
+        <div className="aspect-square self-center p-2 bg-gray-700 rounded-md">
           {isLoading ? <LoadingDots /> : <PieChart slices={slices} />}
         </div>
-        <div className="bg-gray-800 font-bold text-xl p-2 rounded-md col-span-2">
+        <div className="col-span-2 p-2 text-xl font-bold bg-gray-800 rounded-md">
           {isLoading ? (
             <LoadingDots />
           ) : (
             <TimeSeriesChart data={timeSeriesData} />
           )}
         </div>
-        <div className="col-span-2 sm:col-span-3">
-          <h3 className="font-bold text-xl ">Slices</h3>
+        <div className="sm:col-span-3 col-span-2">
+          <h3 className=" text-xl font-bold">Slices</h3>
           {isLoading ? (
             <LoadingDots />
           ) : (
@@ -365,8 +365,8 @@ export default function C1() {
             />
           )}
         </div>
-        <div className="col-span-2 sm:col-span-3">
-          <h3 className="font-bold text-xl ">Transactions</h3>
+        <div className="sm:col-span-3 col-span-2">
+          <h3 className=" text-xl font-bold">Transactions</h3>
           <TransactionTable values={flatTransactions} />
         </div>
       </div>

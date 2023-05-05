@@ -1,11 +1,11 @@
-import { Outlet, Link } from "react-router-dom";
 import logo from "../../src/home.png";
+import { Outlet, Link } from "react-router-dom";
 
 export default function Layout() {
   return (
     <>
-      <nav className="bg-zinc-900 w-full fixed z-50">
-        <div className="flex justify-around items-center p-4">
+      <nav className="bg-zinc-900 fixed z-50 w-full">
+        <div className="flex items-center justify-around p-4">
           <Link to="/">
             <img src={logo} alt="nr-logo" />
           </Link>

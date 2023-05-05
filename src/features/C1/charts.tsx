@@ -210,7 +210,7 @@ export function PieChart({ slices }: { slices: Slice[] }) {
   }, {});
 
   const handleMouseOver = useCallback(
-    function (e: MouseEvent, d: d3.PieArcDatum<Data>) {
+    function (_: MouseEvent, d: d3.PieArcDatum<Data>) {
       setHighlighted(d.index);
     },
     [setHighlighted]

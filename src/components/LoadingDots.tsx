@@ -2,7 +2,7 @@ export default function LoadingDots() {
   return (
     <div className="flex flex-shrink">
       <div
-        className="animate-bounce transform -translate-y-1/4"
+        className="animate-bounce -translate-y-1/4 transform"
         style={{
           animationDelay: "250ms",
         }}
@@ -10,7 +10,7 @@ export default function LoadingDots() {
         .
       </div>
       <div
-        className="animate-bounce transform -translate-y-1/4"
+        className="animate-bounce -translate-y-1/4 transform"
         style={{
           animationDelay: "500ms",
         }}
@@ -18,7 +18,7 @@ export default function LoadingDots() {
         .
       </div>
       <div
-        className="animate-bounce transform -translate-y-1/4"
+        className="animate-bounce -translate-y-1/4 transform"
         style={{
           animationDelay: "750ms",
         }}
