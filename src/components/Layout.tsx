@@ -10,13 +10,7 @@ export default function Layout() {
             <img src={logo} alt="nr-logo" />
           </Link>
           <Link to="/art">Art</Link>
-          <a
-            target="_blank"
-            rel="noopener noreferrer"
-            href="https://c1-kohl.vercel.app/"
-          >
-            C1 (external)
-          </a>
+          <Link to="/c1">C1</Link>
           <Link to="/slay">Slay (wip)</Link>
         </div>
       </nav>
