@@ -1,0 +1,43 @@
+---
+import logo from '../assets/home.png';
+---
+
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="description" content="Nathanael Rea's site">
+		<meta name="viewport" content="width=device-width" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.ico" />
+		<title>Nathanael Rea</title>
+	</head>
+	<body>
+      <nav class="relative bg-gray-900 p-8 h-16 w-full flex items-center justify-around">
+		<a href="/">
+			<img src={logo} alt="nr-logo" />
+		</a>
+		<a href="/art">Art</a>
+		<a href="https://c1-kohl.vercel.app/">C1</a>
+		<a href="/slay">Slay</a>
+      </nav>
+	  <slot />
+	</body>
+</html>
+<style is:global>
+	:root {
+		--accent: 136, 58, 234;
+		--accent-light: 224, 204, 250;
+		--accent-dark: 49, 10, 101;
+		--accent-gradient: linear-gradient(45deg, rgb(var(--accent)), rgb(var(--accent-light)) 30%, white 60%);
+	}
+	html {
+		font-family: system-ui, sans-serif;
+		background: #13151A;
+		background-size: 224px;
+		color:white
+	}
+	code {
+		font-family: Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono,
+			Bitstream Vera Sans Mono, Courier New, monospace;
+	}
+</style>
