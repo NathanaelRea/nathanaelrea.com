@@ -1,22 +1,22 @@
 ---
-import { Image } from "astro:assets";
 import Layout from "../layouts/Layout.astro";
+import ImageContainer from "../layouts/ImageContainer.astro";
+import OptimizedImage from "../components/OptimizedImage.astro";
 import bell from "../assets/Art/BELL.png";
 import eun from "../assets/Art/mac_n_eun.png";
 import margot from "../assets/Art/margot.png";
 import sunshine from "../assets/Art/ray_of_sun.png";
 import smash from "../assets/Art/Super_Smash_Bros_Mute.png";
 import unwise from "../assets/Art/UNWISE.png";
-import ImageContainer from "../layouts/ImageContainer.astro";
 ---
 
 <Layout title="Art">
   <ImageContainer>
-    <Image src={margot} alt="Margot" widths={[250, 500, 1000]} />
-    <Image src={eun} alt="Mac and Eun" widths={[250, 500, 1000]} />
-    <Image src={sunshine} alt="Ray of Sunshine" widths={[250, 500, 1000]} />
-    <Image src={bell} alt="BELL" widths={[250, 500, 1000]} />
-    <Image src={smash} alt="Super Smash Bros Mute" widths={[250, 500, 1000]} />
-    <Image src={unwise} alt="UNWISE" widths={[250, 500, 1000]} />
+    <OptimizedImage src={margot} alt="Margot" />
+    <OptimizedImage src={eun} alt="Mac and Eun" />
+    <OptimizedImage src={sunshine} alt="Ray of Sunshine" />
+    <OptimizedImage src={bell} alt="BELL" />
+    <OptimizedImage src={smash} alt="Super Smash Bros Mute" />
+    <OptimizedImage src={unwise} alt="UNWISE" />
   </ImageContainer>
 </Layout>
