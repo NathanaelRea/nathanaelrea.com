@@ -1,22 +1,20 @@
 ---
-import { Image } from "astro:assets";
 import Layout from "../layouts/Layout.astro";
-import i1 from "../assets/Photos/2023-08-16.1.jpg";
-import i2 from "../assets/Photos/2024-01-06.1.jpg";
+import ImageContainer from "../layouts/ImageContainer.astro";
+import OptimizedImage from "../components/OptimizedImage.astro";
 import i3 from "../assets/Photos/2024-01-19.1.jpg";
 import i4 from "../assets/Photos/2024-01-19.2.jpg";
-import i5 from "../assets/Photos/2024-01-20.1.jpg";
 import i6 from "../assets/Photos/2024-01-20.2.jpg";
-import ImageContainer from "../layouts/ImageContainer.astro";
+import i7 from "../assets/Photos/2024-07-28.jpg";
+import i8 from "../assets/Photos/2024-08-30.jpg";
 ---
 
 <Layout title="Photos">
   <ImageContainer>
-    <Image src={i6} alt="2024-01-20.2" widths={[250, 500, 1000]} />
-    <Image src={i5} alt="2024-01-20.1" widths={[250, 500, 1000]} />
-    <Image src={i4} alt="2024-01-19.2" widths={[250, 500, 1000]} />
-    <Image src={i3} alt="2024-01-19.1" widths={[250, 500, 1000]} />
-    <Image src={i2} alt="2024-01-06.1" widths={[250, 500, 1000]} />
-    <Image src={i1} alt="2023-08-16.1" widths={[250, 500, 1000]} />
+    <OptimizedImage src={i8} alt="2024-08-30" />
+    <OptimizedImage src={i7} alt="2024-07-28" />
+    <OptimizedImage src={i6} alt="2024-01-20.2" />
+    <OptimizedImage src={i4} alt="2024-01-19.2" />
+    <OptimizedImage src={i3} alt="2024-01-19.1" />
   </ImageContainer>
 </Layout>
