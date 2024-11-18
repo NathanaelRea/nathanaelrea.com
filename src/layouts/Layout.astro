@@ -1,44 +1,74 @@
 ---
-import logo from '../assets/home.png';
-import { Image } from "astro:assets"
+interface Props {
+	title: string;
+}
+
+const { title } = Astro.props;
 ---
 
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 	<head>
 		<meta charset="UTF-8" />
-		<meta name="description" content="Nathanael Rea's site">
+		<meta name="description" content="Nathanael Rea" />
 		<meta name="viewport" content="width=device-width" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.ico" />
-		<title>Nathanael Rea</title>
+		<meta name="generator" content={Astro.generator} />
+		<title>{title}</title>
 	</head>
-	<body>
-      <nav class="relative bg-gray-900 p-8 h-16 w-full flex items-center justify-around">
-		<a href="/">
-			<Image src={logo} alt="nr-logo" />
-		</a>
-		<a href="/art">Art</a>
-		<a href="/photos">Photos</a>
-		<a href="https://c1-kohl.vercel.app/">C1</a>
-      </nav>
-	  <slot />
+	<body class="flex flex-col h-screen">
+		<header class="flex justify-center py-4">
+			<nav class="max-w-xl w-full">
+				<ul class="flex gap-6 text-xl">
+					<li><a href="/">Home</a></li>
+					<li><a href="/art">Art</a></li>
+					<li><a href="/photos">Photos</a></li>
+				</ul>
+			</nav>
+		</header>
+		<main class="flex-grow flex justify-center px-4">
+			<div class="w-full max-w-6xl p-4">
+				<slot />
+			</div>
+		</main>
+		<footer class="text-center py-2">
+			<p>&copy; 2023 Nathanael Rea. All rights reserved.</p>
+		</footer>
 	</body>
 </html>
 <style is:global>
 	:root {
-		--accent: 136, 58, 234;
-		--accent-light: 224, 204, 250;
-		--accent-dark: 49, 10, 101;
-		--accent-gradient: linear-gradient(45deg, rgb(var(--accent)), rgb(var(--accent-light)) 30%, white 60%);
+		--text-foreground: #ffffff;
+		--text-background: #13151a;
+		--accent-lighter: #afeeee; 
+		--accent: #40e0d0; 
+		--accent-darker: #008b8b;
 	}
 	html {
 		font-family: system-ui, sans-serif;
-		background: #13151A;
-		background-size: 224px;
-		color:white
+		background: var(--text-background);
+		color: var(--text-foreground);
+	}
+	a {
+		color: var(--accent);
+		font-weight: bold;
+		text-decoration: none;
+		&:hover {
+			color: var(--accent-darker);
+		}
+		&:active {
+			color: var(--accent-lighter);
+		}
 	}
 	code {
-		font-family: Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono,
-			Bitstream Vera Sans Mono, Courier New, monospace;
+		font-family:
+			Menlo,
+			Monaco,
+			Lucida Console,
+			Liberation Mono,
+			DejaVu Sans Mono,
+			Bitstream Vera Sans Mono,
+			Courier New,
+			monospace;
 	}
 </style>
