@@ -9,4 +9,6 @@ interface Props {
 const { src, alt } = Astro.props;
 ---
 
-<Image src={src} alt={alt} widths={[250, 500, 1000]} />
+<a href={src.src} title={alt}>
+  <Image src={src} alt={alt} widths={[250, 500, 1000]} />
+</a>
