@@ -5,16 +5,22 @@ import OptimizedImage from "../components/OptimizedImage.astro";
 import i3 from "../assets/Photos/2024-01-19.1.jpg";
 import i4 from "../assets/Photos/2024-01-19.2.jpg";
 import i6 from "../assets/Photos/2024-01-20.2.jpg";
-import i7 from "../assets/Photos/2024-07-28.jpg";
-import i8 from "../assets/Photos/2024-08-30.jpg";
+import tahoe from "../assets/Photos/2024-07-28_tahoe.jpg"
+import haarlem from "../assets/Photos/2024-08-30_haarlem.jpg"
+import ams from "../assets/Photos/2024-09-02_ams.jpg"
+import park1 from "../assets/Photos/2024-12-07_park1.jpg"
+import park2 from "../assets/Photos/2024-12-07_park2.jpg"
 ---
 
 <Layout title="Photos">
   <ImageContainer>
-    <OptimizedImage src={i8} alt="2024-08-30" />
-    <OptimizedImage src={i7} alt="2024-07-28" />
-    <OptimizedImage src={i6} alt="2024-01-20.2" />
-    <OptimizedImage src={i4} alt="2024-01-19.2" />
-    <OptimizedImage src={i3} alt="2024-01-19.1" />
+    <OptimizedImage src={park2} alt="central park ski" />
+    <OptimizedImage src={park1} alt="central park south" />
+    <OptimizedImage src={ams} alt="amsterdam" />
+    <OptimizedImage src={haarlem} alt="haarlem" />
+    <OptimizedImage src={tahoe} alt="tahoe" />
+    <OptimizedImage src={i6} alt="point state park" />
+    <OptimizedImage src={i4} alt="pittsburgh winter sisters" />
+    <OptimizedImage src={i3} alt="pittsburgh 2024-01-19" />
   </ImageContainer>
 </Layout>
