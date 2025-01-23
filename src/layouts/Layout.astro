@@ -14,16 +14,16 @@ const { pathname } = Astro.url
 <html lang="en">
 	<head>
 		<meta charset="UTF-8" />
-		<meta name="description" content="Nathanael Rea" />
+		<meta name="description" content="Nathanael Rea's website" />
 		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.ico" />
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="icon" href="favicon.png" sizes="32x32" type="image/png">
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
     <ClientRouter />
 	</head>
 	<body class="flex flex-col h-screen">
 		<header class="flex justify-center py-4" transition:persist >
-      {/* @ts-expect-error not sure why? lsp issue? */}
       <Nav defaultPath={pathname} client:load />
 		</header>
 		<main class="flex-grow flex justify-center px-8 py-4">
