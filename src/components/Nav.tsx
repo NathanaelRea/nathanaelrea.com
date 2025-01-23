@@ -12,6 +12,7 @@ const tabs = [
 interface NavProps {
   defaultPath: string;
 }
+
 const Nav: React.FC<NavProps> = ({ defaultPath }) => {
   const [currentPath, setCurrentPath] = useState(defaultPath);
   const normPath = currentPath.replace(/\/+$/, "") || "/";

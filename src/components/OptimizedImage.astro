@@ -10,8 +10,17 @@ const { src, alt } = Astro.props;
 ---
 
 <div class="relative">
-  <div class="absolute top-1 left-1 md:top-2 md:left-2 w-full h-full bg-teal-500"></div>
+  <div
+    class="absolute top-1 left-1 md:top-2 md:left-2 w-full h-full bg-teal-500"
+  >
+  </div>
   <a href={src.src} title={alt} class="relative z-10 block">
-    <Image src={src} alt={alt} widths={[250, 500, 1000]} loading="lazy" class="w-full h-auto"  />
+    <Image
+      src={src}
+      alt={alt}
+      widths={[250, 500, 1000]}
+      loading="lazy"
+      class="w-full h-auto"
+    />
   </a>
 </div>
