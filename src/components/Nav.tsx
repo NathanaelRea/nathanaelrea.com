@@ -30,7 +30,7 @@ const Nav: React.FC<NavProps> = ({ defaultPath }) => {
             key={tab.id}
             className={cn(
               !isCurrentPath && "hover:text-cyan-500/50",
-              "relative rounded-full px-4 py-2 text-lg font-bold text-cyan-500 transition",
+              "relative rounded-full px-4 py-2 text-lg font-bold text-cyan-500 transition cursor-pointer",
             )}
             style={{
               WebkitTapHighlightColor: "transparent",
